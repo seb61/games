@@ -1,3 +1,6 @@
+from csv_handler import *
+
+
 def exit_without_saving() -> bool:
     return input("Are you sure want to exit without saving? Yes/no: ").lower() in ("y", "yes")
 
@@ -23,12 +26,22 @@ def main_loop():
 
         match input_str:
             case "1" | "add": # add entry
+                print("Input game you would like to add: ")
+                append_row("games.csv")
                 pass
             case "2" | "edit": # edit entry
+                print("What game would you like to edit: ")
+                option = input()
+                update_row("games.csv", option)
                 pass
             case "3" | "remove": # remove
+                print("What game would you like to remove: ")
+                option = input()
+                delete_row("games_csv", option)
                 pass
             case "4" | "print": # print
+                print("Current games: ")
+                display_csv("games.csv")
                 pass
             case "5" | "exit and save": # exit
                 pass
