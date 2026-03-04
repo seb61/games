@@ -4,8 +4,8 @@ from enum import Enum
 
 class Entry:
     # Probably a better way of doing this
-    def __init__(self, game_title: str, release_year: int, rating: float = -1, genre: str = None):
-        self.game_title = game_title
+    def __init__(self, movie_title: str, release_year: int, rating: float = -1, genre: str = None):
+        self.movie_title = movie_title
 
         # TODO: runtime errors are not suitable for this program; use proper checks
         assert release_year >= 1950 and release_year <= 2027, f"invalid release year: {release_year}"
@@ -16,21 +16,21 @@ class Entry:
         self.genre = genre 
 
     def __str__(self):
-        return f"{self.game_title} ({self.release_year})\trating: {self.rating}, genre: {self.genre}"
+        return f"{self.movie_title} ({self.release_year})\trating: {self.rating}, genre: {self.genre}"
 
     # TODO: use built in str method
     def contains(self, string):
-        return string in f"{self.game_title} {self.release_year} {self.rating} {self.genre}"
+        return string in f"{self.movie_title} {self.release_year} {self.rating} {self.genre}"
 
 
 class Catalogue:
     DB_FILE = "db.pkl"
 
     def add_entry(self, entry: Entry):
-        # hash based on game title
-        game_title = entry.game_title
-        if game_title not in self.data:
-            self.data[game_title] = entry
+        # hash based on movie title
+        movie_title = entry.movie_title
+        if movie_title not in self.data:
+            self.data[movie_title] = entry
 
     def search_keyword(self, keyword) -> tuple:
         if not keyword:
@@ -44,7 +44,7 @@ class Catalogue:
 
     def search(self, entry: Entry) -> bool:
         # TODO: remove dupe code in add_entry
-        return entry.game_title in self.data
+        return entry.movie_title in self.data
 
     def __init__(self):
         self.data = {}
@@ -75,11 +75,11 @@ def main():
         return default if (not ok_if_empty and not res) else res
 
     def search_prompt() -> str:
-        return input("Enter game title: ")
+        return input("Enter movie title: ")
 
     def add_entry_prompt() -> Entry:
         # bad bad bad, but sample code. Real project will have frontend deal with this
-        title = entry_prompt("Game title: ")
+        title = entry_prompt("movie title: ")
         if not title:
             print("Invalid title")
             return None
@@ -91,7 +91,7 @@ def main():
 
         release_year = int(release_year)
 
-        rating = input("Rating (default: -1): ")
+        rating = input("Rating (0-5): ")
         if not rating:
             rating = -1
         else:
@@ -115,7 +115,7 @@ def main():
                 entry = add_entry_prompt()
                 if entry != None:
                     if catalogue.search(entry):
-                        print(f"Error: cannot add \"{entry.game_title}\": entry already exists in database")
+                        print(f"Error: cannot add \"{entry.movie_title}\": entry already exists in database")
                     else:
                         catalogue.add_entry(entry)
                         print(f"Added entry: {entry}")
@@ -125,8 +125,10 @@ def main():
                     print("Enter new entry data: \n")
                     entry = add_entry_prompt()
                     if entry != None:
-                        catalogue.data[entry.game_title] = entry
-                        del catalogue.data[res]
+                        if entry.movie_title != res:
+                            del catalogue.data[res]
+                        catalogue.add_entry(entry)
+
                         print(f"Updated entry: {entry}")
                 else:
                     print(f"Error: \"{res}\" not found in database")
