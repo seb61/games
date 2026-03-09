@@ -4,7 +4,7 @@ const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 
-// MIME
+// MIME https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types
 const mimeTypes = {
   '.html': 'text/html',
   '.css': 'text/css',
@@ -32,7 +32,7 @@ const server = http.createServer((req, res) => {
 
   // determine content type/ext
   const ext = path.extname(filePath);
-  const contentType = mimeTypes[ext] || 'application/octet-stream';
+  const contentType = mimeTypes[ext] || 'application/octet-stream'; // default
 
   fs.readFile(filePath, (err, content) => {
     if (err) {
