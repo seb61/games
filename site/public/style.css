@@ -1,4 +1,5 @@
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -10,6 +11,7 @@ html, body {
   overflow-x: hidden;
 }
 
+/* app container */
 .app-container {
   display: flex;
   flex-direction: column;
@@ -40,16 +42,7 @@ html, body {
   gap: 16px;
 }
 
-/* login button */
-.btn-login {
-  background-color: #757575;
-  color: #ffffff;
-}
-.btn-login:hover {
-  background-color: #616161;
-}
-
-/* generic button */
+/* button styles */
 .btn {
   padding: 8px 16px;
   border: none;
@@ -58,7 +51,6 @@ html, body {
   font-size: 16px;
   transition: background-color 0.2s ease;
 }
-
 
 .btn-add {
   background-color: #ff8000;
@@ -92,7 +84,7 @@ html, body {
   background-color: #616161;
 }
 
-/* login icon style */
+/* login icon */
 .login-icon-button {
   background: none;
   border: none;
@@ -104,9 +96,8 @@ html, body {
   justify-content: center;
   transition: color 0.2s ease;
 }
-/* highlight */
 .login-icon-button:hover {
-  color: #ffcc80; 
+  color: #ffcc80;
 }
 .login-icon-button svg {
   width: 24px;
@@ -114,22 +105,15 @@ html, body {
   pointer-events: none;
 }
 
-.login-area {
-  padding-left: 16px;
-  color: #ffffff;
-  font-weight: bold;
-}
-
-/* movie grid */
+/* movies grid */
 .movies-grid {
   display: grid;
   /* max 5 per row */
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, 1fr); 
   gap: 16px;
   padding: 16px;
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden;
 }
 
 .movie-card {
@@ -142,6 +126,7 @@ html, body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
+/* add card */
 .add-card {
   background-color: #1a1a1a;
   border: 2px dashed #444;
@@ -186,26 +171,7 @@ html, body {
   text-align: center;
 }
 
-/* stars */
-.rating {
-  display: flex;
-  gap: 4px;
-  margin-top: 6px;
-}
-
-.rating .star {
-  font-size: 20px;
-  color: #555;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.rating .star.hover,
-.rating .star.selected {
-  color: #ffcc00;
-}
-
-/* overlay */
+/* add overlay */
 .model-overlay {
   position: fixed;
   top: 0;
@@ -217,10 +183,6 @@ html, body {
   align-items: center;
   justify-content: center;
   z-index: 100;
-}
-
-.model-overlay.hidden {
-  display: none;
 }
 
 .model {
@@ -259,4 +221,31 @@ html, body {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+/* stars */
+.rating {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.star {
+  cursor: pointer;
+  font-size: 20px;
+  color: #555;
+  transition: color 0.2s ease;
+}
+
+.star.selected {
+  color: #ffcc00;
+}
+
+.star.hover {
+  color: #ffcc00;
+}
+
+.hidden {
+  display: none;
 }

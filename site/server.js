@@ -2,49 +2,45 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
+const publicDir = path.join(__dirname, 'public');
 
 // MIME https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types
 const mimeTypes = {
   '.html': 'text/html',
   '.css': 'text/css',
   '.js': 'application/javascript',
+  '.json': 'application/json',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
-  '.woff': 'font/woff',
-  '.woff2': 'font/woff2',
-  '.ttf': 'font/ttf'
 };
 
 const server = http.createServer((req, res) => {
+  // use index when root is requested
+  let filePath = req.url === '/' ? 'index.html' : req.url;
   // sanitize
-  let safePath = req.url.split('?')[0];
-  safePath = safePath.replace(/\.\./g, '');
+  filePath = filePath.split('?')[0];
+  filePath = path.join(publicDir, filePath);
 
-  // default to index
-  let filePath = path.join(__dirname, 'public', safePath);
-  if (safePath === '/' || safePath === '') {
-    filePath = path.join(__dirname, 'public', 'index.html');
-  }
-
-  // determine content type/ext
-  const ext = path.extname(filePath);
-  const contentType = mimeTypes[ext] || 'application/octet-stream'; // default
-
-  fs.readFile(filePath, (err, content) => {
+  fs.readFile(filePath, (err, data) => {
     if (err) {
-      res.writeHead(404, { 'Content-Type': 'text/plain' });
-      res.end('404 Not Found');
-    } else {
-      res.writeHead(200, { 'Content-Type': contentType });
-      res.end(content);
+      // file not found or other error
+      res.statusCode = 404;
+      res.setHeader('Content-Type', 'text/plain');
+      res.end('Not Found');
+      return;
     }
+    const ext = path.extname(filePath).toLowerCase();
+    const contentType = mimeTypes[ext] || 'application/octet-stream';
+    res.statusCode = 200;
+    res.setHeader('Content-Type', contentType);
+    res.end(data);
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}/`);
+server.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
 });
