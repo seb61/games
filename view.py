@@ -1,7 +1,9 @@
 import tkinter as tk
+from login_model import LoginModel
 
 class appView:
     def __init__(self):
+        self.login_model = LoginModel()
         # This class is a GUI Application for the login and registration page. The application uses tkinter for making the
         # window. The window has a fixed size. So does the text, so they are formatted well together.
 
@@ -55,7 +57,7 @@ class appView:
 
         if not username or not password:
             self.message.config(text="Enter username and password")
-        elif username in self.users and self.users[username] == password:
+        elif self.login_model.login(username, password):
             self.message.config(text=f"Logged in as {username}")
         else:
             self.message.config(text="Wrong")
