@@ -147,10 +147,11 @@ function App() {
         'header',
         { key: 'header', className: 'top-bar' },
         [
+          // site name
           React.createElement(
             'h1',
             { key: 'site', className: 'site-name' },
-            'POC'
+            'FTS Movie Catalogue' 
           ),
           React.createElement(
             'div',
