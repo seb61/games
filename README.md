@@ -7,4 +7,4 @@ The project’s purpose is to display a catalogue for movies and streaming produ
 
 `cd games/site`
 
-`node server.js`
+`npm start`
