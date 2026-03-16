@@ -7,7 +7,7 @@
     "start": "node server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "FTS",
   "license": "ISC",
   "dependencies": {}
 }
