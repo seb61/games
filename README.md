@@ -1,3 +1,5 @@
+# Project
+The project’s purpose is to display a catalogue for movies and streaming productions
 # Running
 * Ensure Node 18+ is installed
 
