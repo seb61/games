@@ -6,6 +6,14 @@ const path = require('path');
 const PORT = process.env.PORT || 3000;
 const publicDir = path.join(__dirname, 'public');
 
+/**
+ * Docs:
+ * - https://dev.to/michaelishri/dont-expose-your-database-to-the-world-3fke (sceuring db)
+ * - https://nodejs.org/api/http.html#class-httpclientrequest (node server setup)
+ * - https://developer.mozilla.org/en-US/docs/Glossary/REST & https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API (setting up api's)
+ * - https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Server-side/Node_server_without_framework (static serving)
+ * - https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication (auth)
+ */
 
 /**
  * Helper to parse the movies DB into an array.
@@ -99,7 +107,7 @@ function handleApiLogin(req, res) {
   req.on('data', (chunk) => {
     body += chunk.toString();
 
-    // if large, prvent abuse
+    // if large, prvent abuse (https://forums.meteor.com/t/picker-how-to-get-post-params/23699)
     if (body.length > 1e6) {
       req.connection.destroy();
     }

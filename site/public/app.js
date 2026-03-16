@@ -1,5 +1,10 @@
 const { useState, useEffect } = React;
 
+/**
+ * Docs:
+ * - https://react.dev/reference/react/hooks
+ */
+
 // star rating system
 function StarRating({ rating, onRate }) {
   const [hoverValue, setHoverValue] = useState(0);
@@ -167,7 +172,7 @@ function App() {
           React.createElement(
             'h1',
             { key: 'site', className: 'site-name' },
-            'FTS Movie Catalogue'
+            'FTS Movie Catalogue' // header title
           ),
           React.createElement(
             'div',
