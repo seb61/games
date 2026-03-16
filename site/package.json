@@ -1,0 +1,13 @@
+{
+  "name": "fts-movie-catalogue",
+  "version": "1.0.0",
+  "description": "A user friendly movie catalogue.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {}
+}
