@@ -1,5 +1,4 @@
-html,
-body {
+html, body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -11,7 +10,6 @@ body {
   overflow-x: hidden;
 }
 
-/* app container */
 .app-container {
   display: flex;
   flex-direction: column;
@@ -19,7 +17,7 @@ body {
   height: 100%;
 }
 
-/* top bar */
+/* header */
 .top-bar {
   display: flex;
   align-items: center;
@@ -42,7 +40,7 @@ body {
   gap: 16px;
 }
 
-/* button styles */
+/* all button styling */
 .btn {
   padding: 8px 16px;
   border: none;
@@ -105,15 +103,15 @@ body {
   pointer-events: none;
 }
 
-/* movies grid */
+/* movie grid */
 .movies-grid {
   display: grid;
-  /* max 5 per row */
-  grid-template-columns: repeat(5, 1fr); 
+  grid-template-columns: repeat(5, 1fr);
   gap: 16px;
   padding: 16px;
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .movie-card {
@@ -126,7 +124,6 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
-/* add card */
 .add-card {
   background-color: #1a1a1a;
   border: 2px dashed #444;
@@ -171,7 +168,26 @@ body {
   text-align: center;
 }
 
-/* add overlay */
+/* all star rating styles */
+.rating {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.rating .star {
+  font-size: 20px;
+  color: #555;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.rating .star.hover,
+.rating .star.selected {
+  color: #ffcc00;
+}
+
+/* modal overlays */
 .model-overlay {
   position: fixed;
   top: 0;
@@ -193,7 +209,8 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
-.movie-form label {
+.movie-form label,
+.login-form label {
   display: flex;
   flex-direction: column;
   margin-bottom: 15px;
@@ -202,7 +219,8 @@ body {
 }
 
 .movie-form input,
-.movie-form textarea {
+.movie-form textarea,
+.login-form input {
   margin-top: 5px;
   padding: 8px;
   border: 1px solid #444;
@@ -221,29 +239,13 @@ body {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  margin-top: 10px;
 }
 
-/* stars */
-.rating {
-  display: flex;
-  justify-content: center;
-  gap: 4px;
-  margin-top: 8px;
-}
-
-.star {
-  cursor: pointer;
-  font-size: 20px;
-  color: #555;
-  transition: color 0.2s ease;
-}
-
-.star.selected {
-  color: #ffcc00;
-}
-
-.star.hover {
-  color: #ffcc00;
+.login-error {
+  color: #e53935;
+  font-size: 14px;
+  margin-top: -8px;
 }
 
 .hidden {

@@ -1,48 +1,4 @@
-const { useState } = React;
-
-// swap to db
-const initialMovies = [
-  {
-    id: 1,
-    title: 'Inception',
-    description:
-      'A thief who steals corporate secrets through dream‑sharing technology is offered a chance at redemption if he can plant an idea in a target’s mind.',
-    poster: 'img/inception.jpeg',
-    rating: 0,
-  },
-  {
-    id: 2,
-    title: 'Interstellar',
-    description:
-      'With Earth dying, a team of explorers travels through a wormhole in search of a habitable planet to ensure humanity’s survival.',
-    poster: 'img/interstellar.jpeg',
-    rating: 0,
-  },
-  {
-    id: 3,
-    title: 'The Dark Knight',
-    description:
-      'Batman confronts the Joker, a criminal mastermind whose chaotic schemes threaten to plunge Gotham City into anarchy.',
-    poster: 'img/darkknight.jpeg',
-    rating: 0,
-  },
-  {
-    id: 4,
-    title: 'The Shawshank Redemption',
-    description:
-      'Wrongly convicted of murder, banker Andy Dufresne befriends fellow inmate Red and finds hope while plotting a daring prison escape.',
-    poster: 'img/shawshank.jpeg',
-    rating: 0,
-  },
-  {
-    id: 5,
-    title: 'The Matrix',
-    description:
-      'A hacker learns that the world he knows is a simulated reality and joins a rebellion to free humanity from the machines.',
-    poster: 'img/matrix.jpeg',
-    rating: 0,
-  },
-];
+const { useState, useEffect } = React;
 
 // star rating system
 function StarRating({ rating, onRate }) {
@@ -51,7 +7,7 @@ function StarRating({ rating, onRate }) {
     'div',
     { className: 'rating' },
     [1, 2, 3, 4, 5].map((value) => {
-      // determine if this star should be highlighted
+      // determine if start should be highlighted
       const isActive = value <= (hoverValue || rating);
       return React.createElement(
         'span',
@@ -68,7 +24,7 @@ function StarRating({ rating, onRate }) {
   );
 }
 
-// MovieCard renders a single movie card including its components.
+// MovieCard renders a single movie card including its metadata.
 function MovieCard({ movie, onRate }) {
   return React.createElement(
     'div',
@@ -92,66 +48,126 @@ function MovieCard({ movie, onRate }) {
       React.createElement(StarRating, {
         key: 'rating',
         rating: movie.rating,
-        onRate: (value) => onRate(movie.id, value), // used for updating the rating
+        onRate: (value) => onRate(movie.id, value),
       }),
     ]
   );
 }
 
-// App manages the catalogue and overlays.
+// App manages auth, movie data, and overlays.
 function App() {
-  const [movies, setMovies] = useState(initialMovies);
-  const [showModal, setShowModal] = useState(false);
+  const [movies, setMovies] = useState([]);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [nextId, setNextId] = useState(1);
 
-  // update a movie's rating in state (change to db)
-  const handleRate = (id, value) => {
-    setMovies((prev) =>
-      prev.map((movie) =>
-        movie.id === id ? { ...movie, rating: value } : movie // creates a new array with the updated movie rating
-      )
-    );
+  // fetch movies on login
+  useEffect(() => {
+    if (!loggedIn) return; // if state isnt true
+    fetch('/api/movies')
+      .then((res) => res.json())
+      .then((data) => {
+        // maps it to MovieCard format
+        const transformed = data.map((movie, index) => ({
+          id: index + 1,
+          title: movie.title,
+          description: movie.description,
+          poster: movie.coverImage || '',
+          rating: Number(movie.rating) || 0,
+        }));
+        setMovies(transformed);
+        setNextId(transformed.length + 1);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch movies:', err);
+      });
+  }, [loggedIn]);
+
+  // handle login form
+  const handleLogin = (e) => {
+    e.preventDefault(); // prevent form submission
+    setLoginError('');
+
+    fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: loginUsername, password: loginPassword }),
+    })
+      .then((res) => {
+        if (res.status === 200) return res.json();
+        throw new Error('Unauthorized');
+      })
+      .then((data) => {
+        if (data.success) {
+          // change states
+          setLoggedIn(true);
+          setShowLoginModal(false);
+          // clear creds field
+          setLoginUsername('');
+          setLoginPassword('');
+        } else {
+          setLoginError(data.message || 'Invalid username or password.');
+        }
+      })
+      .catch(() => {
+        setLoginError('Invalid username or password.');
+      });
   };
 
-  // add a new movie when the form is submitted (change to db)
+  // handles movie addition (locally) (need to move to server to save per user & ratings)
   const handleAddMovie = (e) => {
     e.preventDefault();
     const title = newTitle.trim();
     const desc = newDesc.trim();
-    if (!title || !desc) return;
+    if (!title || !desc) return; // if missing title and desc
+
     const newMovie = {
-      id: Date.now(),
+      id: nextId,
       title: title,
       description: desc,
       poster: '',
       rating: 0,
     };
+
     setMovies((prev) => [...prev, newMovie]);
+    setNextId((id) => id + 1);
     setNewTitle('');
     setNewDesc('');
-    setShowModal(false);
+    setShowAddModal(false);
   };
 
-  // remove the last movie from the list (change to db)
+  // remove last movie from list
   const handleRemoveMovie = () => {
     setMovies((prev) => prev.slice(0, -1));
   };
 
+  // update rating by movie id
+  const handleRate = (id, value) => {
+    setMovies((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, rating: value } : m))
+    );
+  };
+
+  // DOM
   return React.createElement(
     'div',
     { className: 'app-container' },
     [
-      // header with site name and buttons
+      // header
       React.createElement(
         'header',
         { key: 'header', className: 'top-bar' },
         [
-          // site name
           React.createElement(
             'h1',
             { key: 'site', className: 'site-name' },
-            'FTS Movie Catalogue' 
+            'FTS Movie Catalogue'
           ),
           React.createElement(
             'div',
@@ -162,7 +178,8 @@ function App() {
                 {
                   key: 'addBtn',
                   className: 'btn btn-add',
-                  onClick: () => setShowModal(true),
+                  onClick: () => setShowAddModal(true),
+                  disabled: !loggedIn,
                 },
                 '+ Add Movie'
               ),
@@ -172,6 +189,7 @@ function App() {
                   key: 'removeBtn',
                   className: 'btn btn-remove',
                   onClick: handleRemoveMovie,
+                  disabled: !loggedIn || movies.length === 0,
                 },
                 'Remove Movie'
               ),
@@ -182,8 +200,9 @@ function App() {
                   className: 'login-icon-button',
                   title: 'Login',
                   'aria-label': 'Login',
+                  onClick: () => setShowLoginModal(true),
                 },
-                // login icon
+                // svg icon for user
                 React.createElement(
                   'svg',
                   {
@@ -215,47 +234,45 @@ function App() {
           ),
         ]
       ),
-      // catalogue grid
-      React.createElement(
-        'main',
-        { key: 'main', className: 'movies-grid' },
-        [
-          ...movies.map((movie) =>
-            React.createElement(MovieCard, {
-              key: movie.id,
-              movie: movie,
-              onRate: handleRate,
-            })
-          ),
-          // always show add card at the end
-          React.createElement(
-            'div',
-            { key: 'addCard', className: 'movie-card add-card' },
-            React.createElement(
-              'button',
-              {
-                className: 'add-card-button',
-                onClick: () => setShowModal(true),
-              },
-              '+ Add Movie'
-            )
-          ),
-        ]
-      ),
-      // adding a movie overlay (fix naming)
-      showModal
+      // movie grid shown when logged in
+      loggedIn
+        ? React.createElement(
+            'main',
+            { key: 'main', className: 'movies-grid' },
+            [
+              ...movies.map((movie) =>
+                React.createElement(MovieCard, {
+                  key: movie.id,
+                  movie: movie,
+                  onRate: handleRate,
+                })
+              ),
+              React.createElement(
+                'div',
+                { key: 'addCard', className: 'movie-card add-card' },
+                React.createElement(
+                  'button',
+                  {
+                    className: 'add-card-button',
+                    onClick: () => setShowAddModal(true),
+                    disabled: !loggedIn,
+                  },
+                  '+ Add Movie'
+                )
+              ),
+            ]
+          )
+        : null,
+      // add movie overlay
+      showAddModal
         ? React.createElement(
             'div',
-            { key: 'modal', className: 'model-overlay' },
+            { key: 'addModal', className: 'model-overlay' },
             React.createElement(
               'div',
               { className: 'model' },
               [
-                React.createElement(
-                  'h2',
-                  { key: 'modalTitle' },
-                  'Add a Movie'
-                ),
+                React.createElement('h2', { key: 'title' }, 'Add a Movie'),
                 React.createElement(
                   'form',
                   {
@@ -264,18 +281,13 @@ function App() {
                     onSubmit: handleAddMovie,
                   },
                   [
-                    // poster upload (not working)
                     React.createElement(
                       'label',
                       { key: 'posterLabel' },
                       [
-                        React.createElement(
-                          'span',
-                          { key: 'label' },
-                          'Poster Image (optional)'
-                        ),
+                        React.createElement('span', { key: 's' }, 'Poster Image (optional)'),
                         React.createElement('input', {
-                          key: 'posterInput',
+                          key: 'poster',
                           type: 'file',
                           disabled: true,
                         }),
@@ -283,15 +295,11 @@ function App() {
                     ),
                     React.createElement(
                       'label',
-                      { key: 'titleLabel' },
+                      { key: 'nameLabel' },
                       [
-                        React.createElement(
-                          'span',
-                          { key: 'label' },
-                          'Movie Name'
-                        ),
+                        React.createElement('span', { key: 's' }, 'Movie Name'),
                         React.createElement('input', {
-                          key: 'titleInput',
+                          key: 'name',
                           type: 'text',
                           value: newTitle,
                           onChange: (e) => setNewTitle(e.target.value),
@@ -303,13 +311,9 @@ function App() {
                       'label',
                       { key: 'descLabel' },
                       [
-                        React.createElement(
-                          'span',
-                          { key: 'label' },
-                          'Description'
-                        ),
+                        React.createElement('span', { key: 's' }, 'Description'),
                         React.createElement('textarea', {
-                          key: 'descInput',
+                          key: 'desc',
                           value: newDesc,
                           onChange: (e) => setNewDesc(e.target.value),
                           placeholder: 'Enter a short description',
@@ -323,7 +327,7 @@ function App() {
                         React.createElement(
                           'button',
                           {
-                            key: 'submitBtn',
+                            key: 'submit',
                             type: 'submit',
                             className: 'btn btn-confirm',
                           },
@@ -332,10 +336,99 @@ function App() {
                         React.createElement(
                           'button',
                           {
-                            key: 'cancelBtn',
+                            key: 'cancel',
                             type: 'button',
                             className: 'btn btn-cancel',
-                            onClick: () => setShowModal(false),
+                            onClick: () => setShowAddModal(false),
+                          },
+                          'Cancel'
+                        ),
+                      ]
+                    ),
+                  ]
+                ),
+              ]
+            )
+          )
+        : null,
+      // login overlay
+      showLoginModal
+        ? React.createElement(
+            'div',
+            { key: 'loginModal', className: 'model-overlay' },
+            React.createElement(
+              'div',
+              { className: 'model' },
+              [
+                React.createElement('h2', { key: 'header' }, 'Login'),
+                React.createElement(
+                  'form',
+                  {
+                    key: 'form',
+                    className: 'login-form',
+                    onSubmit: handleLogin,
+                  },
+                  [
+                    React.createElement(
+                      'label',
+                      { key: 'userLabel' },
+                      [
+                        React.createElement('span', { key: 's' }, 'Username'),
+                        React.createElement('input', {
+                          key: 'user',
+                          type: 'text',
+                          value: loginUsername,
+                          onChange: (e) => setLoginUsername(e.target.value),
+                          placeholder: 'Input username',
+                          required: true,
+                        }),
+                      ]
+                    ),
+                    React.createElement(
+                      'label',
+                      { key: 'passLabel' },
+                      [
+                        React.createElement('span', { key: 's' }, 'Password'),
+                        React.createElement('input', {
+                          key: 'pass',
+                          type: 'password',
+                          value: loginPassword,
+                          onChange: (e) => setLoginPassword(e.target.value),
+                          placeholder: 'Input password',
+                          required: true,
+                        }),
+                      ]
+                    ),
+                    loginError
+                      ? React.createElement(
+                          'div',
+                          { key: 'error', className: 'login-error' },
+                          loginError
+                        )
+                      : null,
+                    React.createElement(
+                      'div',
+                      { key: 'actions', className: 'model-actions' },
+                      [
+                        React.createElement(
+                          'button',
+                          {
+                            key: 'loginSubmit',
+                            type: 'submit',
+                            className: 'btn btn-confirm',
+                          },
+                          'Login'
+                        ),
+                        React.createElement(
+                          'button',
+                          {
+                            key: 'loginCancel',
+                            type: 'button',
+                            className: 'btn btn-cancel',
+                            onClick: () => {
+                              setShowLoginModal(false);
+                              setLoginError('');
+                            },
                           },
                           'Cancel'
                         ),
@@ -351,7 +444,7 @@ function App() {
   );
 }
 
-// mount the app to the DOM
+// render the DOM
 ReactDOM.render(
   React.createElement(App),
   document.getElementById('root')
