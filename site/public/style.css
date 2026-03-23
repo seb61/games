@@ -248,6 +248,22 @@ html, body {
   margin-top: -8px;
 }
 
+/* registeration */
+.register-placeholder {
+  margin-top: 10px;
+  font-size: 14px;
+  text-align: center;
+  color: #e0e0e0;
+}
+.register-placeholder a {
+  color: #ffcc80;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.register-placeholder a:hover {
+  color: #ffea92;
+}
+
 .hidden {
   display: none;
 }

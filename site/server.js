@@ -2,7 +2,6 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-
 const PORT = process.env.PORT || 3000;
 const publicDir = path.join(__dirname, 'public');
 
@@ -20,7 +19,7 @@ const publicDir = path.join(__dirname, 'public');
  * @returns {Array} An array of movie objects with metadata
  */
 function parseMovies() {
-  const filePath = path.join(__dirname, '/private/movies.csv');
+  const filePath = path.join(__dirname, 'private/movies.csv');
   let data;
 
   // get the db
@@ -35,18 +34,18 @@ function parseMovies() {
   // remove header
   lines.shift();
   const movies = [];
-  for (const line of lines) {
-    // split by delimiter
-    const parts = line.split('|');
 
-    // in case bad line
+  for (const line of lines) {
+    const parts = line.split('|'); // delimiter
+
+    // incase bad line
     if (parts.length < 6) {
       console.error('Invalid line:', line);
       continue;
     }
 
     const [title, descriptionRaw, releaseYear, rating, genre, cover] = parts;
-    // sometimes has quotes, so remove them
+    // check for quotes around the desc
     const description = descriptionRaw.replace(/^"|"$/g, '');
     movies.push({
       title: title.trim(),
@@ -65,7 +64,7 @@ function parseMovies() {
  * @returns {Array} An array of user objects with metadata
  */
 function parseUsers() {
-  const filePath = path.join(__dirname, '/private/users.csv');
+  const filePath = path.join(__dirname, 'private/users.csv');
   let data;
 
   // get the file
@@ -75,12 +74,10 @@ function parseUsers() {
     console.error('Failed to read users.csv:', err);
     return [];
   }
-
+  
   // remove header
   const lines = data.trim().split(/\r?\n/);
   lines.shift();
-
-  // add to array
   const users = [];
   for (const line of lines) {
     const [username, password, accountType] = line.split(',');
@@ -114,11 +111,11 @@ function handleApiLogin(req, res) {
   });
   req.on('end', () => {
     try {
-      // get creds from the body
-      const creds = JSON.parse(body); 
+      // get creds from body
+      const creds = JSON.parse(body);
       const { username, password } = creds;
       const users = parseUsers();
-      // find a matching user in db
+      // find matching user
       const matched = users.find(
         (u) => u.username === username && u.password === password
       );
@@ -144,17 +141,16 @@ function handleApiLogin(req, res) {
 // Serves static files from the public dir
 function serveStatic(req, res) {
   let reqPath = req.url.split('?')[0];
-  // prevent searching through parent directories
+  // prevent searching through dirs
   reqPath = reqPath.replace(/\.\./g, '');
 
   let filePath;
   if (reqPath === '/' || reqPath === '') {
-    filePath = path.join(publicDir, 'index.html'); // send them to home page if no page request
+    filePath = path.join(publicDir, 'index.html');
   } else {
     filePath = path.join(publicDir, reqPath);
   }
 
-  // find the file
   fs.readFile(filePath, (err, data) => {
     if (err) {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
@@ -169,7 +165,7 @@ function serveStatic(req, res) {
       '.js': 'application/javascript',
       '.png': 'image/png',
       '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',  
       '.svg': 'image/svg+xml',
       '.ico': 'image/x-icon',
       '.json': 'application/json',
@@ -180,7 +176,7 @@ function serveStatic(req, res) {
   });
 }
 
-// Request listener
+// Listener
 const server = http.createServer((req, res) => {
   if (req.url === '/api/movies' && req.method === 'GET') {
     handleApiMovies(res);

@@ -12,7 +12,7 @@ function StarRating({ rating, onRate }) {
     'div',
     { className: 'rating' },
     [1, 2, 3, 4, 5].map((value) => {
-      // determine if start should be highlighted
+      // determine if star should be highlighted
       const isActive = value <= (hoverValue || rating);
       return React.createElement(
         'span',
@@ -64,7 +64,7 @@ function App() {
   const [movies, setMovies] = useState([]);
   const [loggedIn, setLoggedIn] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(true);
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [loginUsername, setLoginUsername] = useState('');
@@ -78,7 +78,7 @@ function App() {
     fetch('/api/movies')
       .then((res) => res.json())
       .then((data) => {
-        // maps it to MovieCard format
+        // maps to MovieCard format
         const transformed = data.map((movie, index) => ({
           id: index + 1,
           title: movie.title,
@@ -96,7 +96,7 @@ function App() {
 
   // handle login form
   const handleLogin = (e) => {
-    e.preventDefault(); // prevent form submission
+    e.preventDefault();
     setLoginError('');
 
     fetch('/api/login', {
@@ -113,7 +113,7 @@ function App() {
           // change states
           setLoggedIn(true);
           setShowLoginModal(false);
-          // clear creds field
+          // clear fields
           setLoginUsername('');
           setLoginPassword('');
         } else {
@@ -125,12 +125,12 @@ function App() {
       });
   };
 
-  // handles movie addition (locally) (need to move to server to save per user & ratings)
+  // handle adding a movie (locally)
   const handleAddMovie = (e) => {
     e.preventDefault();
     const title = newTitle.trim();
     const desc = newDesc.trim();
-    if (!title || !desc) return; // if missing title and desc
+    if (!title || !desc) return;
 
     const newMovie = {
       id: nextId,
@@ -147,19 +147,19 @@ function App() {
     setShowAddModal(false);
   };
 
-  // remove last movie from list
+  // remove last movie
   const handleRemoveMovie = () => {
     setMovies((prev) => prev.slice(0, -1));
   };
 
-  // update rating by movie id
+  // update rating by id
   const handleRate = (id, value) => {
     setMovies((prev) =>
       prev.map((m) => (m.id === id ? { ...m, rating: value } : m))
     );
   };
 
-  // DOM
+  // build DOM
   return React.createElement(
     'div',
     { className: 'app-container' },
@@ -172,7 +172,7 @@ function App() {
           React.createElement(
             'h1',
             { key: 'site', className: 'site-name' },
-            'FTS Movie Catalogue' // header title
+            'FTS Movie Catalogue'
           ),
           React.createElement(
             'div',
@@ -239,7 +239,7 @@ function App() {
           ),
         ]
       ),
-      // movie grid shown when logged in
+      // movie grid when logged in
       loggedIn
         ? React.createElement(
             'main',
@@ -366,6 +366,7 @@ function App() {
               { className: 'model' },
               [
                 React.createElement('h2', { key: 'header' }, 'Login'),
+                // login form handles username/password and submission
                 React.createElement(
                   'form',
                   {
@@ -374,6 +375,7 @@ function App() {
                     onSubmit: handleLogin,
                   },
                   [
+                    // username field
                     React.createElement(
                       'label',
                       { key: 'userLabel' },
@@ -389,6 +391,7 @@ function App() {
                         }),
                       ]
                     ),
+                    // password field
                     React.createElement(
                       'label',
                       { key: 'passLabel' },
@@ -404,6 +407,7 @@ function App() {
                         }),
                       ]
                     ),
+                    // error message
                     loginError
                       ? React.createElement(
                           'div',
@@ -411,6 +415,7 @@ function App() {
                           loginError
                         )
                       : null,
+                    // actions for submit/cancel
                     React.createElement(
                       'div',
                       { key: 'actions', className: 'model-actions' },
@@ -438,6 +443,27 @@ function App() {
                           'Cancel'
                         ),
                       ]
+                    ),
+                  ]
+                ),
+                // registration (not don)
+                React.createElement(
+                  'div',
+                  { key: 'registerPlaceholder', className: 'register-placeholder' },
+                  [
+                    React.createElement('span', { key: 'text' }, "Don't have an account? "),
+                    React.createElement(
+                      'a',
+                      {
+                        key: 'link',
+                        href: '#',
+                        onClick: (e) => {
+                          e.preventDefault();
+                          // TODO: implement
+                          alert('not implemented');
+                        },
+                      },
+                      'Register'
                     ),
                   ]
                 ),
