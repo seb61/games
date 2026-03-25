@@ -1,3 +1,6 @@
+const React = require('react');
+const ReactDOM = require('react-dom');
+
 const { useState, useEffect } = React;
 
 /**
@@ -60,11 +63,11 @@ function MovieCard({ movie, onRate }) {
 }
 
 // App manages auth, movie data, and overlays.
-function App() {
+function App({ initialLoggedIn = false }) {
   const [movies, setMovies] = useState([]);
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(initialLoggedIn); // skips login for test
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(true);
+  const [showLoginModal, setShowLoginModal] = useState(!initialLoggedIn); // skips login modal for test
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [loginUsername, setLoginUsername] = useState('');
@@ -224,13 +227,13 @@ function App() {
                       cy: 8,
                       r: 4,
                       stroke: 'currentColor',
-                      'stroke-width': 2,
+                      'strokeWidth': 2,
                     }),
                     React.createElement('path', {
                       key: 'p',
                       d: 'M4 21c0-4 4-6 8-6s8 2 8 6v1H4v-1z',
                       stroke: 'currentColor',
-                      'stroke-width': 2,
+                      'strokeWidth': 2,
                     }),
                   ]
                 )
@@ -476,7 +479,26 @@ function App() {
 }
 
 // render the DOM
-ReactDOM.render(
-  React.createElement(App),
-  document.getElementById('root')
-);
+// fixed to use React 18 syntax
+const { createRoot } = require('react-dom/client');
+
+if (typeof document !== 'undefined') {
+  const rootEl = document.getElementById('root');
+  if (rootEl) {
+    const root = createRoot(rootEl);
+    root.render(React.createElement(App));
+  }
+}
+// guard render
+if (typeof document !== 'undefined') {
+  const root = document.getElementById('root');
+  if (root) {
+    ReactDOM.render(
+      React.createElement(App),
+      root
+    );
+  }
+}
+
+// export app to avoid auto render issues
+module.exports = App;
