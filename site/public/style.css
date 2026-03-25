@@ -39,6 +39,14 @@ html, body {
   align-items: center;
   gap: 16px;
 }
+/* search bar container */
+.search-bar {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  margin-right: 12px;
+  font-size: 14px;
+}
 
 /* all button styling */
 .btn {

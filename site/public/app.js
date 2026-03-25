@@ -1,3 +1,4 @@
+// UNCOMMENT THESE 2 FOR TESTS
 const React = require('react');
 const ReactDOM = require('react-dom');
 
@@ -74,6 +75,7 @@ function App({ initialLoggedIn = false }) {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [nextId, setNextId] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // fetch movies on login
   useEffect(() => {
@@ -162,6 +164,11 @@ function App({ initialLoggedIn = false }) {
     );
   };
 
+  // handle search bar
+  const filteredMovies = movies.filter((m) => 
+  m.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  
+
   // build DOM
   return React.createElement(
     'div',
@@ -181,6 +188,16 @@ function App({ initialLoggedIn = false }) {
             'div',
             { key: 'actions', className: 'actions' },
             [
+              React.createElement(
+                'input', {
+                  key: 'searchBar',
+                  type: 'text',
+                  className: 'search-bar',
+                  placeholder: 'Search Movie',
+                  value: searchQuery,
+                  onChange: (e) => setSearchQuery(e.target.value)
+                },
+              ),
               React.createElement(
                 'button',
                 {
@@ -479,6 +496,12 @@ function App({ initialLoggedIn = false }) {
 }
 
 // render the DOM
+// COMMENT THIS FOR TESTS
+// ReactDOM.render(
+//   React.createElement(App),
+//   document.getElementById('root')
+// );
+
 // fixed to use React 18 syntax
 const { createRoot } = require('react-dom/client');
 
@@ -487,16 +510,6 @@ if (typeof document !== 'undefined') {
   if (rootEl) {
     const root = createRoot(rootEl);
     root.render(React.createElement(App));
-  }
-}
-// guard render
-if (typeof document !== 'undefined') {
-  const root = document.getElementById('root');
-  if (root) {
-    ReactDOM.render(
-      React.createElement(App),
-      root
-    );
   }
 }
 
