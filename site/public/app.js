@@ -3,6 +3,7 @@ const { useState, useEffect } = React;
 /**
  * Docs:
  * - https://react.dev/reference/react/hooks
+ * - https://developer.themoviedb.org/reference/search-movie
  */
 
 // star rating system
