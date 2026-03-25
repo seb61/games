@@ -1,6 +1,6 @@
-// UNCOMMENT THESE 2 FOR TESTS
-const React = require('react');
-const ReactDOM = require('react-dom');
+// UNCOMMENT THESE 2 ONLY FOR TESTS
+// const React = require('react');
+// const ReactDOM = require('react-dom');
 
 const { useState, useEffect } = React;
 
@@ -496,11 +496,11 @@ function App({ initialLoggedIn = false }) {
 }
 
 // render the DOM
-// COMMENT THIS FOR TESTS
-// ReactDOM.render(
-//   React.createElement(App),
-//   document.getElementById('root')
-// );
+// COMMENT THIS ONLY FOR TESTS
+ReactDOM.render(
+  React.createElement(App),
+  document.getElementById('root')
+);
 
 // fixed to use React 18 syntax
 const { createRoot } = require('react-dom/client');
