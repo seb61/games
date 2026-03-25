@@ -23,7 +23,7 @@ The front-end is built using **React** loaded via a CDN. With the following comp
 ## Running tests
 1. Install dependencies if required (see `package.json`)
 2. 
-In app.js, uncomment these (for tests only): 
+In `app.js`, uncomment these (for tests only): 
 ```
 const React = require('react');
 const ReactDOM = require('react-dom');
