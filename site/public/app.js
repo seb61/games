@@ -63,14 +63,20 @@ function MovieCard({ movie, onRate }) {
 function App() {
   const [movies, setMovies] = useState([]);
   const [loggedIn, setLoggedIn] = useState(false);
+  // overlay state
   const [showAddModal, setShowAddModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(true);
+  // form states
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
+  // login states
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [nextId, setNextId] = useState(1);
+  const [nextId, setNextId] = useState(1); // for unique ids
+  // tmdb states
+  const [posterOptions, setPosterOptions] = useState([]);
+  const [selectedPoster, setSelectedPoster] = useState('');
 
   // fetch movies on login
   useEffect(() => {
@@ -93,6 +99,38 @@ function App() {
         console.error('Failed to fetch movies:', err);
       });
   }, [loggedIn]);
+
+  // search posters from TMDB
+  useEffect(() => {
+    if (!newTitle) { // wait for title change
+      setPosterOptions([]);
+      setSelectedPoster('');
+      return;
+    }
+    // calls API after user stops typing for 0.8s
+    const handler = setTimeout(() => {
+      const apiKey = '8e8e6903634e4456e06bdd740af13ca6';
+      const query = encodeURIComponent(newTitle);
+      // call the search API
+      fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${query}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && Array.isArray(data.results)) {
+            // build image
+            const options = data.results
+              .filter((item) => item.poster_path)
+              .slice(0, 5)
+              .map((item) => `https://image.tmdb.org/t/p/w500${item.poster_path}`);
+            setPosterOptions(options);
+            setSelectedPoster(options[0] || '');
+          }
+        })
+        .catch(() => {
+          // ignore for now
+        });
+    }, 800);
+    return () => clearTimeout(handler);
+  }, [newTitle]);
 
   // handle login form
   const handleLogin = (e) => {
@@ -136,7 +174,7 @@ function App() {
       id: nextId,
       title: title,
       description: desc,
-      poster: '',
+      poster: selectedPoster || '',
       rating: 0,
     };
 
@@ -144,6 +182,8 @@ function App() {
     setNextId((id) => id + 1);
     setNewTitle('');
     setNewDesc('');
+    setSelectedPoster('');
+    setPosterOptions([]);
     setShowAddModal(false);
   };
 
@@ -245,6 +285,7 @@ function App() {
             'main',
             { key: 'main', className: 'movies-grid' },
             [
+              // for each movie, render a card
               ...movies.map((movie) =>
                 React.createElement(MovieCard, {
                   key: movie.id,
@@ -288,18 +329,6 @@ function App() {
                   [
                     React.createElement(
                       'label',
-                      { key: 'posterLabel' },
-                      [
-                        React.createElement('span', { key: 's' }, 'Poster Image (optional)'),
-                        React.createElement('input', {
-                          key: 'poster',
-                          type: 'file',
-                          disabled: true,
-                        }),
-                      ]
-                    ),
-                    React.createElement(
-                      'label',
                       { key: 'nameLabel' },
                       [
                         React.createElement('span', { key: 's' }, 'Movie Name'),
@@ -325,6 +354,36 @@ function App() {
                         }),
                       ]
                     ),
+                    // show TMDB poster slider
+                    posterOptions.length > 0
+                      ? React.createElement(
+                          'div',
+                          { key: 'posterSection' },
+                          [
+                            React.createElement('span', { key: 'label' }, 'Select Poster'),
+                            React.createElement(
+                              'div',
+                              { className: 'poster-slider', key: 'slider' },
+                              posterOptions.map((url, idx) =>
+                                React.createElement(
+                                  'div',
+                                  {
+                                    key: idx,
+                                    className:
+                                      'poster-option' +
+                                      (selectedPoster === url ? ' selected' : ''),
+                                    onClick: () => setSelectedPoster(url),
+                                  },
+                                  React.createElement('img', {
+                                    src: url,
+                                    alt: 'Poster option',
+                                  })
+                                )
+                              )
+                            ),
+                          ]
+                        )
+                      : null,
                     React.createElement(
                       'div',
                       { key: 'actions', className: 'model-actions' },
@@ -344,7 +403,12 @@ function App() {
                             key: 'cancel',
                             type: 'button',
                             className: 'btn btn-cancel',
-                            onClick: () => setShowAddModal(false),
+                            onClick: () => {
+                              setShowAddModal(false);
+                              // reset poster state when canceling
+                              setPosterOptions([]);
+                              setSelectedPoster('');
+                            },
                           },
                           'Cancel'
                         ),
