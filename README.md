@@ -19,3 +19,20 @@ The front-end is built using **React** loaded via a CDN. With the following comp
 1. Install dependencies if required (see `package.json`)
 2. From the project root, start the server `npm start`. The server will listen on port 3000 by default.
 3. Visit `http://localhost:3000` in your browser.
+
+## Running tests
+1. Install dependencies if required (see `package.json`)
+2. 
+In app.js, uncomment these in (for tests only): 
+```
+const React = require('react');
+const ReactDOM = require('react-dom');
+```
+and comment this out (for tests only):
+```
+ReactDOM.render(
+  React.createElement(App),
+  document.getElementById('root')
+);
+```
+3. `npm test` from `site`.
