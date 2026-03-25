@@ -71,6 +71,7 @@ function App() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [nextId, setNextId] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // fetch movies on login
   useEffect(() => {
@@ -159,6 +160,11 @@ function App() {
     );
   };
 
+  // handle search bar
+  const filteredMovies = movies.filter((m) => 
+  m.title.toLowerCase().includes(searchQuery.toLowerCase())
+);
+
   // build DOM
   return React.createElement(
     'div',
@@ -178,6 +184,16 @@ function App() {
             'div',
             { key: 'actions', className: 'actions' },
             [
+              React.createElement(
+                'input', {
+                  key: 'searchBar',
+                  type: 'text',
+                  className: 'search-bar',
+                  placeholder: 'Search Movie',
+                  value: searchQuery,
+                  onChange: (e) => setSearchQuery(e.target.value)
+                },
+              ),
               React.createElement(
                 'button',
                 {
@@ -245,7 +261,7 @@ function App() {
             'main',
             { key: 'main', className: 'movies-grid' },
             [
-              ...movies.map((movie) =>
+              ...filteredMovies.map((movie) =>
                 React.createElement(MovieCard, {
                   key: movie.id,
                   movie: movie,
