@@ -265,7 +265,7 @@ function App({ initialLoggedIn = false }) {
             'main',
             { key: 'main', className: 'movies-grid' },
             [
-              ...movies.map((movie) =>
+              ...filteredMovies.map((movie) =>
                 React.createElement(MovieCard, {
                   key: movie.id,
                   movie: movie,
