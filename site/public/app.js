@@ -320,9 +320,9 @@ function App({ initialLoggedIn = false }) {
     setEditPosterOptions([]);
     setEditSelectedPoster('');
   };
-  // handle search bar
-  const filteredMovies = movies.filter((m) => 
-  m.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  // // handle search bar
+  // const filteredMovies = movies.filter((m) => 
+  // m.title.toLowerCase().includes(searchQuery.toLowerCase()));
   
 
   // build DOM
@@ -350,8 +350,8 @@ function App({ initialLoggedIn = false }) {
                   type: 'text',
                   className: 'search-bar',
                   placeholder: 'Search Movie',
-                  value: searchQuery,
-                  onChange: (e) => setSearchQuery(e.target.value)
+                  // value: searchQuery,
+                  // onChange: (e) => setSearchQuery(e.target.value)
                 },
               ),
               React.createElement(
