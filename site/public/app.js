@@ -128,6 +128,9 @@ function App({ initialLoggedIn = false }) {
   const [editPosterOptions, setEditPosterOptions] = useState([]);
   const [editSelectedPoster, setEditSelectedPoster] = useState('');
 
+  // search query state for filtering movies
+  const [searchQuery, setSearchQuery] = useState('');
+
   // fetch movies on login
   useEffect(() => {
     if (!loggedIn) return; // if state isnt true
@@ -321,8 +324,8 @@ function App({ initialLoggedIn = false }) {
     setEditSelectedPoster('');
   };
   // // handle search bar
-  // const filteredMovies = movies.filter((m) => 
-  // m.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredMovies = movies.filter((m) =>
+    m.title.toLowerCase().includes(searchQuery.trim().toLowerCase()));
   
 
   // build DOM
@@ -345,34 +348,16 @@ function App({ initialLoggedIn = false }) {
             { key: 'actions', className: 'actions' },
             [
               React.createElement(
-                'input', {
+                'input',
+                {
                   key: 'searchBar',
                   type: 'text',
                   className: 'search-bar',
                   placeholder: 'Search Movie',
-                  // value: searchQuery,
-                  // onChange: (e) => setSearchQuery(e.target.value)
-                },
-              ),
-              React.createElement(
-                'button',
-                {
-                  key: 'addBtn',
-                  className: 'btn btn-add',
-                  onClick: () => setShowAddModal(true),
+                  value: searchQuery,
+                  onChange: (e) => setSearchQuery(e.target.value),
                   disabled: !loggedIn,
                 },
-                '+ Add Movie'
-              ),
-              React.createElement(
-                'button',
-                {
-                  key: 'removeBtn',
-                  className: 'btn btn-remove',
-                  onClick: handleRemoveMovie,
-                  disabled: !loggedIn || movies.length === 0,
-                },
-                'Remove Movie'
               ),
               React.createElement(
                 'button',
@@ -422,7 +407,7 @@ function App({ initialLoggedIn = false }) {
             { key: 'main', className: 'movies-grid' },
             [
               // for each movie, render a card
-              ...movies.map((movie) =>
+              ...filteredMovies.map((movie) =>
                 React.createElement(MovieCard, {
                   key: movie.id,
                   movie: movie,
@@ -782,6 +767,21 @@ function App({ initialLoggedIn = false }) {
                 ),
               ]
             )
+          )
+        : null,
+
+      // floating add button
+      loggedIn
+        ? React.createElement(
+            'button',
+            {
+              key: 'floatingAddBtn',
+              className: 'floating-add-button',
+              onClick: () => setShowAddModal(true),
+              title: 'Add movie',
+              'aria-label': 'Add movie',
+            },
+            '+'
           )
         : null,
     ]

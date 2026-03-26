@@ -47,10 +47,18 @@ html, body {
 .search-bar {
   padding: 6px 10px;
   border-radius: 4px;
-  border: 1px solid #ccc;
+  border: 1px solid #444;
   margin-right: 12px;
   font-size: 14px;
+  background-color: #1c1c1c;
+  color: #e0e0e0;
 }
+
+/* hint text */
+.search-bar::placeholder {
+  color: #888;
+}
+
 
 /* all button styling */
 .btn {
@@ -308,23 +316,49 @@ html, body {
   border-color: #ffcc00;
 }
 
-/* edit button on movie cards */
+/* add movie */
+.floating-add-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #ff8000;
+  color: #ffffff;
+  border: none;
+  font-size: 36px;
+  line-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+  z-index: 50;
+}
+.floating-add-button:hover {
+  background-color: #e07000;
+}
+
+/* edit buttons on movie cards */
 .edit-icon-button {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: none;
+  background-color: #2a2a2a;
   border: none;
-  color: #888;
+  color: #ffcc80;
   cursor: pointer;
-  padding: 2px;
+  padding: 4px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 .edit-icon-button:hover {
-  color: #ffcc80;
+  background-color: #3a3a3a;
+  color: #ffd699;
 }
 .edit-icon-button svg {
   width: 20px;
