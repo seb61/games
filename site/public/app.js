@@ -7,6 +7,7 @@ const { useState, useEffect } = React;
 /**
  * Docs:
  * - https://react.dev/reference/react/hooks
+ * - https://developer.themoviedb.org/reference/search-movie
  */
 
 // star rating system
@@ -34,30 +35,68 @@ function StarRating({ rating, onRate }) {
 }
 
 // MovieCard renders a single movie card including its metadata.
-function MovieCard({ movie, onRate }) {
+function MovieCard({ movie, onRate, onEdit }) {
   return React.createElement(
     'div',
     { className: 'movie-card' },
     [
+      // edit button at top right of card
+      React.createElement(
+        'button',
+        {
+          key: 'edit',
+          className: 'edit-icon-button',
+          title: 'Edit',
+          'aria-label': 'Edit movie',
+          onClick: () => onEdit && onEdit(movie.id),
+        },
+        // pencil icon
+        React.createElement(
+          'svg',
+          {
+            width: 20,
+            height: 20,
+            viewBox: '0 0 24 24',
+            fill: 'none',
+            xmlns: 'http://www.w3.org/2000/svg',
+          },
+          [
+            React.createElement('path', {
+              key: 'p1',
+              d: 'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z',
+              fill: 'currentColor',
+            }),
+            React.createElement('path', {
+              key: 'p2',
+              d: 'M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z',
+              fill: 'currentColor',
+            }),
+          ]
+        )
+      ),
+      // movie image
       React.createElement('img', {
         key: 'img',
         src: movie.poster || '',
         alt: `Poster for ${movie.title}`,
       }),
+      // movie title
       React.createElement(
         'h2',
         { key: 'title', className: 'movie-title' },
         movie.title
       ),
+      // movie description
       React.createElement(
         'p',
         { key: 'desc', className: 'movie-description' },
         movie.description
       ),
+      // rating component
       React.createElement(StarRating, {
         key: 'rating',
         rating: movie.rating,
-        onRate: (value) => onRate(movie.id, value),
+        onRate: (value) => onRate && onRate(movie.id, value),
       }),
     ]
   );
@@ -66,16 +105,28 @@ function MovieCard({ movie, onRate }) {
 // App manages auth, movie data, and overlays.
 function App({ initialLoggedIn = false }) {
   const [movies, setMovies] = useState([]);
-  const [loggedIn, setLoggedIn] = useState(initialLoggedIn); // skips login for test
+  const [loggedIn, setLoggedIn] = useState(false);
+  // overlay state
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(!initialLoggedIn); // skips login modal for test
+  const [showLoginModal, setShowLoginModal] = useState(true);
+  // form states
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
+  // login states
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [nextId, setNextId] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [nextId, setNextId] = useState(1); // for unique ids
+  // tmdb states
+  const [posterOptions, setPosterOptions] = useState([]);
+  const [selectedPoster, setSelectedPoster] = useState('');
+  // editing states
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editMovieId, setEditMovieId] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [editPosterOptions, setEditPosterOptions] = useState([]);
+  const [editSelectedPoster, setEditSelectedPoster] = useState('');
 
   // fetch movies on login
   useEffect(() => {
@@ -98,6 +149,69 @@ function App({ initialLoggedIn = false }) {
         console.error('Failed to fetch movies:', err);
       });
   }, [loggedIn]);
+
+  // search posters from TMDB
+  useEffect(() => {
+    if (!newTitle) { // wait for title change
+      setPosterOptions([]);
+      setSelectedPoster('');
+      return;
+    }
+    // calls API after user stops typing for 0.8s
+    const handler = setTimeout(() => {
+      const apiKey = '8e8e6903634e4456e06bdd740af13ca6';
+      const query = encodeURIComponent(newTitle);
+      // call the search API
+      fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${query}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && Array.isArray(data.results)) {
+            // build image
+            const options = data.results
+              .filter((item) => item.poster_path)
+              .slice(0, 5)
+              .map((item) => `https://image.tmdb.org/t/p/w500${item.poster_path}`);
+            setPosterOptions(options);
+            setSelectedPoster(options[0] || '');
+          }
+        })
+        .catch(() => {
+          // ignore for now
+        });
+    }, 800);
+    return () => clearTimeout(handler);
+  }, [newTitle]);
+
+  // search posters for editing from TMDB
+  useEffect(() => {
+    if (!showEditModal || !editTitle) {
+      // reset when modal closed or no title
+      setEditPosterOptions([]);
+      setEditSelectedPoster('');
+      return;
+    }
+    // calls API after user stops typing for 0.8s
+    const handler = setTimeout(() => {
+      const apiKey = '8e8e6903634e4456e06bdd740af13ca6';
+      const query = encodeURIComponent(editTitle);
+      fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${query}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && Array.isArray(data.results)) {
+            const options = data.results
+              .filter((item) => item.poster_path)
+              .slice(0, 5)
+              .map((item) => `https://image.tmdb.org/t/p/w500${item.poster_path}`);
+            setEditPosterOptions(options);
+            setEditSelectedPoster(options[0] || ''); // default to first option
+          }
+        })
+        .catch(() => {
+          // ignore errors for now
+        });
+    }, 800);
+    return () => clearTimeout(handler);
+  }, [editTitle, showEditModal]);
 
   // handle login form
   const handleLogin = (e) => {
@@ -141,7 +255,7 @@ function App({ initialLoggedIn = false }) {
       id: nextId,
       title: title,
       description: desc,
-      poster: '',
+      poster: selectedPoster || '',
       rating: 0,
     };
 
@@ -149,6 +263,8 @@ function App({ initialLoggedIn = false }) {
     setNextId((id) => id + 1);
     setNewTitle('');
     setNewDesc('');
+    setSelectedPoster('');
+    setPosterOptions([]);
     setShowAddModal(false);
   };
 
@@ -164,6 +280,46 @@ function App({ initialLoggedIn = false }) {
     );
   };
 
+  // open edit modal with selected movie
+  const handleEditClick = (id) => {
+    const movie = movies.find((m) => m.id === id); // find by id
+    if (!movie) return;
+
+    setEditMovieId(id);
+    setEditTitle(movie.title);
+    setEditDesc(movie.description);
+    // init with current poster if exist
+    setEditSelectedPoster(movie.poster || '');
+    setEditPosterOptions(movie.poster ? [movie.poster] : []);
+    setShowEditModal(true);
+  };
+
+  // save edits
+  const handleSaveEdit = (e) => {
+    e.preventDefault();
+    const title = editTitle.trim();
+    const desc = editDesc.trim();
+    if (!title || !desc) return;
+    setMovies((prev) =>
+      prev.map((m) =>
+        m.id === editMovieId
+          ? {
+              ...m,
+              title: title,
+              description: desc,
+              poster: editSelectedPoster || m.poster,
+            }
+          : m
+      )
+    );
+    // reset states
+    setShowEditModal(false);
+    setEditMovieId(null);
+    setEditTitle('');
+    setEditDesc('');
+    setEditPosterOptions([]);
+    setEditSelectedPoster('');
+  };
   // handle search bar
   const filteredMovies = movies.filter((m) => 
   m.title.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -265,11 +421,13 @@ function App({ initialLoggedIn = false }) {
             'main',
             { key: 'main', className: 'movies-grid' },
             [
-              ...filteredMovies.map((movie) =>
+              // for each movie, render a card
+              ...movies.map((movie) =>
                 React.createElement(MovieCard, {
                   key: movie.id,
                   movie: movie,
                   onRate: handleRate,
+                  onEdit: handleEditClick,
                 })
               ),
               React.createElement(
@@ -308,18 +466,6 @@ function App({ initialLoggedIn = false }) {
                   [
                     React.createElement(
                       'label',
-                      { key: 'posterLabel' },
-                      [
-                        React.createElement('span', { key: 's' }, 'Poster Image (optional)'),
-                        React.createElement('input', {
-                          key: 'poster',
-                          type: 'file',
-                          disabled: true,
-                        }),
-                      ]
-                    ),
-                    React.createElement(
-                      'label',
                       { key: 'nameLabel' },
                       [
                         React.createElement('span', { key: 's' }, 'Movie Name'),
@@ -345,6 +491,36 @@ function App({ initialLoggedIn = false }) {
                         }),
                       ]
                     ),
+                    // show TMDB poster slider
+                    posterOptions.length > 0
+                      ? React.createElement(
+                          'div',
+                          { key: 'posterSection' },
+                          [
+                            React.createElement('span', { key: 'label' }, 'Select Poster'),
+                            React.createElement(
+                              'div',
+                              { className: 'poster-slider', key: 'slider' },
+                              posterOptions.map((url, idx) =>
+                                React.createElement(
+                                  'div',
+                                  {
+                                    key: idx,
+                                    className:
+                                      'poster-option' +
+                                      (selectedPoster === url ? ' selected' : ''),
+                                    onClick: () => setSelectedPoster(url),
+                                  },
+                                  React.createElement('img', {
+                                    src: url,
+                                    alt: 'Poster option',
+                                  })
+                                )
+                              )
+                            ),
+                          ]
+                        )
+                      : null,
                     React.createElement(
                       'div',
                       { key: 'actions', className: 'model-actions' },
@@ -364,7 +540,124 @@ function App({ initialLoggedIn = false }) {
                             key: 'cancel',
                             type: 'button',
                             className: 'btn btn-cancel',
-                            onClick: () => setShowAddModal(false),
+                            onClick: () => {
+                              setShowAddModal(false);
+                              // reset poster state when canceling
+                              setPosterOptions([]);
+                              setSelectedPoster('');
+                            },
+                          },
+                          'Cancel'
+                        ),
+                      ]
+                    ),
+                  ]
+                ),
+              ]
+            )
+          )
+        : null,
+      // edit movie overlay
+      showEditModal
+        ? React.createElement(
+            'div',
+            { key: 'editModal', className: 'model-overlay' },
+            React.createElement(
+              'div',
+              { className: 'model' },
+              [
+                React.createElement('h2', { key: 'title' }, 'Edit Movie'),
+                React.createElement(
+                  'form',
+                  {
+                    key: 'form',
+                    className: 'movie-form',
+                    onSubmit: handleSaveEdit,
+                  },
+                  [
+                    React.createElement(
+                      'label',
+                      { key: 'nameLabel' },
+                      [
+                        React.createElement('span', { key: 's' }, 'Movie Name'),
+                        React.createElement('input', {
+                          key: 'name',
+                          type: 'text',
+                          value: editTitle,
+                          onChange: (e) => setEditTitle(e.target.value),
+                          placeholder: 'Enter title',
+                        }),
+                      ]
+                    ),
+                    React.createElement(
+                      'label',
+                      { key: 'descLabel' },
+                      [
+                        React.createElement('span', { key: 's' }, 'Description'),
+                        React.createElement('textarea', {
+                          key: 'desc',
+                          value: editDesc,
+                          onChange: (e) => setEditDesc(e.target.value),
+                          placeholder: 'Enter a short description',
+                        }),
+                      ]
+                    ),
+                    editPosterOptions.length > 0
+                      ? React.createElement(
+                          'div',
+                          { key: 'posterSection' },
+                          [
+                            React.createElement('span', { key: 'label' }, 'Select Poster'),
+                            React.createElement(
+                              'div',
+                              { className: 'poster-slider', key: 'slider' },
+                              editPosterOptions.map((url, idx) =>
+                                React.createElement(
+                                  'div',
+                                  {
+                                    key: idx,
+                                    className:
+                                      'poster-option' +
+                                      (editSelectedPoster === url ? ' selected' : ''),
+                                    onClick: () => setEditSelectedPoster(url),
+                                  },
+                                  React.createElement('img', {
+                                    src: url,
+                                    alt: 'Poster option',
+                                  })
+                                )
+                              )
+                            ),
+                          ]
+                        )
+                      : null,
+                    React.createElement(
+                      'div',
+                      { key: 'actions', className: 'model-actions' },
+                      [
+                        React.createElement(
+                          'button',
+                          {
+                            key: 'submit',
+                            type: 'submit',
+                            className: 'btn btn-confirm',
+                          },
+                          'Save'
+                        ),
+                        React.createElement(
+                          'button',
+                          {
+                            key: 'cancel',
+                            type: 'button',
+                            className: 'btn btn-cancel',
+                            onClick: () => {
+                              setShowEditModal(false);
+                              setEditMovieId(null);
+                              setEditTitle('');
+                              setEditDesc('');
+                              setEditPosterOptions([]);
+                              setEditSelectedPoster('');
+                            },
                           },
                           'Cancel'
                         ),

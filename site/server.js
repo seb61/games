@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = process.env.PORT || 3000;
+// public dir
 const publicDir = path.join(__dirname, 'public');
 
 /**
@@ -74,7 +75,7 @@ function parseUsers() {
     console.error('Failed to read users.csv:', err);
     return [];
   }
-  
+
   // remove header
   const lines = data.trim().split(/\r?\n/);
   lines.shift();
@@ -116,20 +117,14 @@ function handleApiLogin(req, res) {
       const { username, password } = creds;
       const users = parseUsers();
       // find matching user
-      const matched = users.find(
-        (u) => u.username === username && u.password === password
-      );
-
+      const matched = users.find((u) => u.username === username && u.password === password);
+      
       if (matched) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(
-          JSON.stringify({ success: true, accountType: matched.accountType })
-        );
+        res.end(JSON.stringify({ success: true, accountType: matched.accountType }));
       } else {
         res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(
-          JSON.stringify({ success: false, message: 'Invalid credentials' })
-        );
+        res.end(JSON.stringify({ success: false, message: 'Invalid credentials' }));
       }
     } catch (err) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -165,7 +160,7 @@ function serveStatic(req, res) {
       '.js': 'application/javascript',
       '.png': 'image/png',
       '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',  
+      '.jpeg': 'image/jpeg',
       '.svg': 'image/svg+xml',
       '.ico': 'image/x-icon',
       '.json': 'application/json',
