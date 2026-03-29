@@ -1,4 +1,5 @@
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -58,7 +59,6 @@ html, body {
 .search-bar::placeholder {
   color: #888;
 }
-
 
 /* all button styling */
 .btn {
@@ -349,12 +349,24 @@ html, body {
   border: none;
   color: #ffcc80;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
+  padding: 6px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    opacity 0.2s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+/* show the edit button only when hovering over the card */
+.movie-card:hover .edit-icon-button {
+  opacity: 1;
+  pointer-events: auto;
 }
 .edit-icon-button:hover {
   background-color: #3a3a3a;
@@ -364,4 +376,11 @@ html, body {
   width: 20px;
   height: 20px;
   pointer-events: none;
+}
+
+/* username display */
+.user-display {
+  font-size: 16px;
+  color: #ffffff;
+  margin-left: 8px;
 }

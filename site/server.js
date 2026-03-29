@@ -1,10 +1,10 @@
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
+const http = require("http");
+const fs = require("fs");
+const path = require("path");
 
 const PORT = process.env.PORT || 3000;
 // public dir
-const publicDir = path.join(__dirname, 'public');
+const publicDir = path.join(__dirname, "public");
 
 /**
  * Docs:
@@ -20,14 +20,14 @@ const publicDir = path.join(__dirname, 'public');
  * @returns {Array} An array of movie objects with metadata
  */
 function parseMovies() {
-  const filePath = path.join(__dirname, 'private/movies.csv');
+  const filePath = path.join(__dirname, "private/movies.csv");
   let data;
 
   // get the db
   try {
-    data = fs.readFileSync(filePath, 'utf8');
+    data = fs.readFileSync(filePath, "utf8");
   } catch (err) {
-    console.error('Failed to read movies.csv:', err);
+    console.error("Failed to read movies.csv:", err);
     return [];
   }
 
@@ -37,17 +37,17 @@ function parseMovies() {
   const movies = [];
 
   for (const line of lines) {
-    const parts = line.split('|'); // delimiter
+    const parts = line.split("|"); // delimiter
 
     // incase bad line
     if (parts.length < 6) {
-      console.error('Invalid line:', line);
+      console.error("Invalid line:", line);
       continue;
     }
 
     const [title, descriptionRaw, releaseYear, rating, genre, cover] = parts;
     // check for quotes around the desc
-    const description = descriptionRaw.replace(/^"|"$/g, '');
+    const description = descriptionRaw.replace(/^"|"$/g, "");
     movies.push({
       title: title.trim(),
       description: description.trim(),
@@ -65,14 +65,14 @@ function parseMovies() {
  * @returns {Array} An array of user objects with metadata
  */
 function parseUsers() {
-  const filePath = path.join(__dirname, 'private/users.csv');
+  const filePath = path.join(__dirname, "private/users.csv");
   let data;
 
   // get the file
   try {
-    data = fs.readFileSync(filePath, 'utf8');
+    data = fs.readFileSync(filePath, "utf8");
   } catch (err) {
-    console.error('Failed to read users.csv:', err);
+    console.error("Failed to read users.csv:", err);
     return [];
   }
 
@@ -81,7 +81,7 @@ function parseUsers() {
   lines.shift();
   const users = [];
   for (const line of lines) {
-    const [username, password, accountType] = line.split(',');
+    const [username, password, accountType] = line.split(",");
     users.push({
       username: username.trim(),
       password: password.trim(),
@@ -94,15 +94,15 @@ function parseUsers() {
 // GET /api/movies
 function handleApiMovies(res) {
   const movies = parseMovies();
-  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.writeHead(200, { "Content-Type": "application/json" });
   res.end(JSON.stringify(movies));
 }
 
 // POST /api/login
 function handleApiLogin(req, res) {
-  let body = '';
+  let body = "";
   // receive
-  req.on('data', (chunk) => {
+  req.on("data", (chunk) => {
     body += chunk.toString();
 
     // if large, prvent abuse (https://forums.meteor.com/t/picker-how-to-get-post-params/23699)
@@ -110,74 +110,84 @@ function handleApiLogin(req, res) {
       req.connection.destroy();
     }
   });
-  req.on('end', () => {
+  req.on("end", () => {
     try {
       // get creds from body
       const creds = JSON.parse(body);
       const { username, password } = creds;
       const users = parseUsers();
       // find matching user
-      const matched = users.find((u) => u.username === username && u.password === password);
-      
+      const matched = users.find(
+        (u) => u.username === username && u.password === password,
+      );
+
       if (matched) {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, accountType: matched.accountType }));
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            success: true,
+            accountType: matched.accountType,
+            username: matched.username,
+          }),
+        );
       } else {
-        res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: false, message: 'Invalid credentials' }));
+        res.writeHead(401, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({ success: false, message: "Invalid credentials" }),
+        );
       }
     } catch (err) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: false, message: 'Bad request' }));
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: false, message: "Bad request" }));
     }
   });
 }
 
 // Serves static files from the public dir
 function serveStatic(req, res) {
-  let reqPath = req.url.split('?')[0];
+  let reqPath = req.url.split("?")[0];
   // prevent searching through dirs
-  reqPath = reqPath.replace(/\.\./g, '');
+  reqPath = reqPath.replace(/\.\./g, "");
 
   let filePath;
-  if (reqPath === '/' || reqPath === '') {
-    filePath = path.join(publicDir, 'index.html');
+  if (reqPath === "/" || reqPath === "") {
+    filePath = path.join(publicDir, "index.html");
   } else {
     filePath = path.join(publicDir, reqPath);
   }
 
   fs.readFile(filePath, (err, data) => {
     if (err) {
-      res.writeHead(404, { 'Content-Type': 'text/plain' });
-      res.end('404 Not Found');
+      res.writeHead(404, { "Content-Type": "text/plain" });
+      res.end("404 Not Found");
       return;
     }
     const ext = path.extname(filePath).toLowerCase();
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/MIME_types
     const mimeTypes = {
-      '.html': 'text/html',
-      '.css': 'text/css',
-      '.js': 'application/javascript',
-      '.png': 'image/png',
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.svg': 'image/svg+xml',
-      '.ico': 'image/x-icon',
-      '.json': 'application/json',
+      ".html": "text/html",
+      ".css": "text/css",
+      ".js": "application/javascript",
+      ".png": "image/png",
+      ".jpg": "image/jpeg",
+      ".jpeg": "image/jpeg",
+      ".svg": "image/svg+xml",
+      ".ico": "image/x-icon",
+      ".json": "application/json",
     };
-    const contentType = mimeTypes[ext] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': contentType });
+    const contentType = mimeTypes[ext] || "application/octet-stream";
+    res.writeHead(200, { "Content-Type": contentType });
     res.end(data);
   });
 }
 
 // Listener
 const server = http.createServer((req, res) => {
-  if (req.url === '/api/movies' && req.method === 'GET') {
+  if (req.url === "/api/movies" && req.method === "GET") {
     handleApiMovies(res);
     return;
   }
-  if (req.url === '/api/login' && req.method === 'POST') {
+  if (req.url === "/api/login" && req.method === "POST") {
     handleApiLogin(req, res);
     return;
   }
