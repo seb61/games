@@ -1,5 +1,4 @@
-html,
-body {
+html, body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -123,6 +122,77 @@ body {
   pointer-events: none;
 }
 
+/* nav buttons */
+.nav-icon-button {
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+.nav-icon-button:hover {
+  color: #ffcc80;
+}
+.nav-icon-button svg {
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+}
+
+/* user dropdown */
+.user-menu-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.user-menu-toggle {
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+.user-menu-toggle:hover {
+  background-color: #2a2a2a;
+}
+.user-menu-arrow {
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+.user-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  background-color: #1f1f1f;
+  border: 1px solid #333;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  min-width: 160px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+.user-dropdown-item {
+  padding: 8px 16px;
+  color: #e0e0e0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.user-dropdown-item:hover {
+  background-color: #333;
+}
+
 /* movie grid */
 .movies-grid {
   display: grid;
@@ -241,9 +311,29 @@ body {
   font-size: 14px;
 }
 
+/* register form */
+.register-form label {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+  color: #e0e0e0;
+  font-size: 14px;
+}
+
 .movie-form input,
 .movie-form textarea,
 .login-form input {
+  margin-top: 5px;
+  padding: 8px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background-color: #1c1c1c;
+  color: #e0e0e0;
+  font-size: 14px;
+}
+
+/* register inputs */
+.register-form input {
   margin-top: 5px;
   padding: 8px;
   border: 1px solid #444;
@@ -271,7 +361,7 @@ body {
   margin-top: -8px;
 }
 
-/* registeration */
+/* registration */
 .register-placeholder {
   margin-top: 10px;
   font-size: 14px;
@@ -349,24 +439,12 @@ body {
   border: none;
   color: #ffcc80;
   cursor: pointer;
-  padding: 6px;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  padding: 4px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    opacity 0.2s ease;
-  opacity: 0;
-  pointer-events: none;
-}
-/* show the edit button only when hovering over the card */
-.movie-card:hover .edit-icon-button {
-  opacity: 1;
-  pointer-events: auto;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 .edit-icon-button:hover {
   background-color: #3a3a3a;
@@ -376,11 +454,4 @@ body {
   width: 20px;
   height: 20px;
   pointer-events: none;
-}
-
-/* username display */
-.user-display {
-  font-size: 16px;
-  color: #ffffff;
-  margin-left: 8px;
 }
