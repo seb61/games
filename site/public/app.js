@@ -135,6 +135,11 @@ function App({ initialLoggedIn = false }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   // seach query state
   const [searchQuery, setSearchQuery] = useState("");
+  // poster search overlay states
+  const [showPosterSearchModal, setShowPosterSearchModal] = useState(false);
+  const [posterSearchInput, setPosterSearchInput] = useState("");
+  const [posterSearchResults, setPosterSearchResults] = useState([]);
+  const [posterSearchContext, setPosterSearchContext] = useState("");
 
   // fetch movies on login
   useEffect(() => {
@@ -229,6 +234,41 @@ function App({ initialLoggedIn = false }) {
     }, 800);
     return () => clearTimeout(handler);
   }, [editTitle, showEditModal]);
+
+  // poster search overlay
+  useEffect(() => {
+    // only run when the search overlay is visible
+    if (!showPosterSearchModal) return;
+    // if the input is empty, clear results
+    if (!posterSearchInput) {
+      setPosterSearchResults([]);
+      return;
+    }
+    const handler = setTimeout(() => {
+      const apiKey = "8e8e6903634e4456e06bdd740af13ca6";
+      const query = encodeURIComponent(posterSearchInput);
+      fetch(
+        `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${query}`,
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && Array.isArray(data.results)) {
+            const options = data.results
+              .filter((item) => item.poster_path)
+              .slice(0, 10)
+              .map(
+                (item) =>
+                  `https://image.tmdb.org/t/p/w500${item.poster_path}`,
+              );
+            setPosterSearchResults(options);
+          }
+        })
+        .catch(() => {
+          // ignore errors
+        });
+    }, 800);
+    return () => clearTimeout(handler);
+  }, [posterSearchInput, showPosterSearchModal]);
 
   // handle login form
   const handleLogin = (e) => {
@@ -393,6 +433,27 @@ function App({ initialLoggedIn = false }) {
     setShowUserMenu(false);
     // show login modal again
     setShowLoginModal(true);
+  };
+
+  // open the extended search.
+  // context determines whether its add/edit form
+  const openPosterSearch = (context) => {
+    setPosterSearchContext(context);
+    setPosterSearchInput("");
+    setPosterSearchResults([]);
+    setShowPosterSearchModal(true);
+  };
+
+  // handles poster selection in extended overlay
+  const handlePosterSelectFromSearch = (url) => {
+    if (posterSearchContext === "add") {
+      setSelectedPoster(url);
+      setPosterOptions([url]);
+    } else if (posterSearchContext === "edit") {
+      setEditSelectedPoster(url);
+      setEditPosterOptions([url]);
+    }
+    setShowPosterSearchModal(false);
   };
 
   // handle search bar
@@ -664,6 +725,17 @@ function App({ initialLoggedIn = false }) {
                       ),
                     ])
                   : null,
+                // poster extended search
+                React.createElement(
+                  "button",
+                  {
+                    key: "mediaCheckBtnAdd",
+                    type: "button",
+                    className: "btn-check-media",
+                    onClick: () => openPosterSearch("add"),
+                  },
+                  "Don't see your media? Check Here",
+                ),
                 React.createElement(
                   "div",
                   { key: "actions", className: "model-actions" },
@@ -762,6 +834,17 @@ function App({ initialLoggedIn = false }) {
                       ),
                     ])
                   : null,
+                // extended poster search - edit form
+                React.createElement(
+                  "button",
+                  {
+                    key: "mediaCheckBtnEdit",
+                    type: "button",
+                    className: "btn-check-media",
+                    onClick: () => openPosterSearch("edit"),
+                  },
+                  "Don't see your media? Check Here",
+                ),
                 React.createElement(
                   "div",
                   { key: "actions", className: "model-actions" },
@@ -991,6 +1074,65 @@ function App({ initialLoggedIn = false }) {
                       "Cancel",
                     ),
                   ],
+                ),
+              ],
+            ),
+          ]),
+        )
+      : null,
+
+    // extended poster search overlay
+    showPosterSearchModal
+      ? React.createElement(
+          "div",
+          {
+            key: "posterSearchModal",
+            className: "model-overlay poster-search-modal",
+          },
+          React.createElement("div", { className: "model" }, [
+            React.createElement("h2", { key: "header" }, "Search Media"),
+            // search input
+            React.createElement("input", {
+              key: "searchInput",
+              type: "text",
+              className: "poster-search-input",
+              value: posterSearchInput,
+              onChange: (e) => setPosterSearchInput(e.target.value),
+              placeholder: "Search movie title",
+            }),
+            // search results list
+            React.createElement(
+              "div",
+              { key: "results", className: "poster-search-results" },
+              posterSearchResults.map((url, idx) =>
+                React.createElement(
+                  "div",
+                  {
+                    key: idx,
+                    className: "poster-search-option",
+                    onClick: () => handlePosterSelectFromSearch(url),
+                  },
+                  React.createElement("img", {
+                    src: url,
+                    alt: "Poster option",
+                  }),
+                ),
+              ),
+            ),
+            // close button
+            React.createElement(
+              "div",
+              { key: "actions", className: "model-actions" },
+              [
+                React.createElement(
+                  "button",
+                  {
+                    key: "closeSearch",
+                    type: "button",
+                    className: "btn btn-cancel",
+                    onClick: () => setShowPosterSearchModal(false),
+                  },
+                  "Close",
                 ),
               ],
             ),
