@@ -475,6 +475,7 @@ body {
 .poster-slider::-webkit-scrollbar,
 .poster-search-results::-webkit-scrollbar {
   height: 8px;
+  width: 8px;
 }
 .poster-slider::-webkit-scrollbar-track,
 .poster-search-results::-webkit-scrollbar-track {
@@ -527,9 +528,11 @@ body {
 
 .poster-search-results {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  overflow-x: auto;
-  overflow-y: hidden;
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
   margin-bottom: 12px;
 }
 
