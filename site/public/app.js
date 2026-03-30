@@ -2,7 +2,7 @@
 // const React = require('react');
 // const ReactDOM = require('react-dom');
 
-const { useState, useEffect } = React;
+const { useEffect } = React;
 
 /**
  * Docs:
