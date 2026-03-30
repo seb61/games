@@ -436,21 +436,30 @@ body {
   position: absolute;
   top: 8px;
   right: 8px;
-  background-color: #2a2a2a;
+  width: 32px;
+  height: 32px;
+  background-color: rgba(42, 42, 42, 0.6);
   border: none;
+  border-radius: 50%;
   color: #ffcc80;
   cursor: pointer;
   padding: 4px;
-  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0;
+  pointer-events: none;
   transition:
     background-color 0.2s ease,
-    color 0.2s ease;
+    color 0.2s ease,
+    opacity 0.2s ease;
+}
+.movie-card:hover .edit-icon-button {
+  opacity: 1;
+  pointer-events: auto;
 }
 .edit-icon-button:hover {
-  background-color: #3a3a3a;
+  background-color: rgba(58, 58, 58, 0.8);
   color: #ffd699;
 }
 .edit-icon-button svg {
