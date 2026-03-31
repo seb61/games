@@ -15,7 +15,11 @@ function StarRating({ rating, onRate }) {
           className: "star" + (isActive ? " selected" : ""),
           onMouseEnter: () => setHoverValue(value),
           onMouseLeave: () => setHoverValue(0),
-          onClick: () => onRate(value),
+        onClick: () => {
+          if (typeof onRate === "function") { // check if function before calling
+            onRate(value);
+          }
+        },
         },
         "★",
       );
