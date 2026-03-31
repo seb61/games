@@ -1006,63 +1006,15 @@ function App({ initialLoggedIn = false }) {
       : null,
 
     // extended poster search overlay
-    showPosterSearchModal
-      ? React.createElement(
-          "div",
-          {
-            key: "posterSearchModal",
-            className: "model-overlay poster-search-modal",
-          },
-          React.createElement("div", { className: "model" }, [
-            React.createElement("h2", { key: "header" }, "Search Media"),
-            // search input
-            React.createElement("input", {
-              key: "searchInput",
-              type: "text",
-              className: "poster-search-input",
-              value: posterSearchInput,
-              onChange: (e) => setPosterSearchInput(e.target.value),
-              placeholder: "Search movie title",
-            }),
-            // search results list
-            React.createElement(
-              "div",
-              { key: "results", className: "poster-search-results" },
-              posterSearchResults.map((url, idx) =>
-                React.createElement(
-                  "div",
-                  {
-                    key: idx,
-                    className: "poster-search-option",
-                    onClick: () => handlePosterSelectFromSearch(url),
-                  },
-                  React.createElement("img", {
-                    src: url,
-                    alt: "Poster option",
-                  }),
-                ),
-              ),
-            ),
-            // close button
-            React.createElement(
-              "div",
-              { key: "actions", className: "model-actions" },
-              [
-                React.createElement(
-                  "button",
-                  {
-                    key: "closeSearch",
-                    type: "button",
-                    className: "btn btn-cancel",
-                    onClick: () => setShowPosterSearchModal(false),
-                  },
-                  "Close",
-                ),
-              ],
-            ),
-          ]),
-        )
-      : null,
+    React.createElement(PosterSearchOverlay, {
+      key: "posterOverlay",
+      isOpen: showPosterSearchModal,
+      query: posterSearchInput,
+      onQueryChange: (val) => setPosterSearchInput(val),
+      results: posterSearchResults,
+      onSelect: handlePosterSelectFromSearch,
+      onClose: () => setShowPosterSearchModal(false),
+    }),
 
     // floating add button
     loggedIn
