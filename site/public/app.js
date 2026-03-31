@@ -74,8 +74,26 @@ function App({ initialLoggedIn = false }) {
   useEffect(() => {
     if (!loggedIn) return; // if state isnt true
     fetch("/api/movies")
-      .then((res) => res.json())
+      .then(async (res) => {
+        let data = [];
+        
+        // parse
+        try {
+          data = await res.json();
+        } catch (err) {
+          data = [];
+        }
+
+        if (!res.ok) {
+          // if error
+          const message = data && data.message ? data.message : "Failed to fetch movies";
+          console.error(message);
+          return [];
+        }
+        return data;
+      })
       .then((data) => {
+        if (!Array.isArray(data)) return; // if not array, return
         // maps to MovieCard format
         const transformed = data.map((movie, index) => ({
           id: index + 1,
@@ -161,26 +179,39 @@ function App({ initialLoggedIn = false }) {
         password: loginPassword,
       }),
     })
-      .then((res) => {
-        if (res.status === 200) return res.json();
-        throw new Error("Unauthorized");
-      })
-      .then((data) => {
-        if (data.success) {
-          // change states
+      .then(async (res) => {
+        // parse
+        let data = {};
+
+        try {
+          data = await res.json();
+        } catch (err) {
+          data = {};
+        }
+
+        // change states
+        if (res.ok && data && data.success) {
+          // successful login
           setLoggedIn(true);
           setShowLoginModal(false);
           // store logged in user for display
-          setCurrentUser(data.username || loginUsername);
+          setCurrentUser(loginUsername);
           // clear fields
           setLoginUsername("");
           setLoginPassword("");
         } else {
-          setLoginError(data.message || "Invalid username or password.");
+          // error handle
+          const status = res.status;
+          let message = (data && data.message) || "Login failed";
+          if (status === 401) message = data.message || "Invalid credentials";
+          else if (status === 400) message = data.message || "Bad request";
+          else if (status === 500) message = data.message || "Server error";
+          setLoginError(message);
         }
       })
       .catch(() => {
-        setLoginError("Invalid username or password.");
+        // network error
+        setLoginError("Network error.");
       });
   };
 
@@ -281,22 +312,35 @@ function App({ initialLoggedIn = false }) {
         confirmPassword: confirm,
       }),
     })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          // close register overlay
+      .then(async (res) => {
+        let data = {};
+        // parse
+        try {
+          data = await res.json();
+        } catch (err) {
+          data = {};
+        }
+
+        if (res.ok && data && data.success) {
+          // register success
           setShowRegisterModal(false);
           setShowLoginModal(true);
-          // clear registration fields
+          // clear fields
           setRegisterUsername("");
           setRegisterPassword("");
           setRegisterConfirm("");
         } else {
-          setRegisterError(data.message || "Registration failed");
+          // error handle
+          const status = res.status;
+          let message = (data && data.message) || "Registration failed";
+          if (status === 409) message = data.message || "Username already exists";
+          else if (status === 400) message = data.message || "Bad request";
+          else if (status === 500) message = data.message || "Server error";
+          setRegisterError(message);
         }
       })
       .catch(() => {
-        setRegisterError("Registration failed");
+        setRegisterError("Network error.");
       });
   };
 

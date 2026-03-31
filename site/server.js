@@ -35,7 +35,7 @@ function parseMovies() {
       data = fs.readFileSync(filePath, "utf8");
     } catch (err2) {
       console.error("Failed to read movies.csv:", err2);
-      return [];
+      return null; // for api
     }
   }
 
@@ -86,7 +86,7 @@ function parseUsers() {
       data = fs.readFileSync(filePath, "utf8");
     } catch (err2) {
       console.error("Failed to read users.csv:", err2);
-      return [];
+      return null; // for api
     }
   }
 
@@ -108,6 +108,14 @@ function parseUsers() {
 // GET /api/movies
 function handleApiMovies(res) {
   const movies = parseMovies();
+  // if null return 500
+  if (movies === null) {
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({ success: false, message: "Failed to load movies database" }),
+    );
+    return;
+  }
   res.writeHead(200, { "Content-Type": "application/json" });
   res.end(JSON.stringify(movies));
 }
@@ -186,30 +194,54 @@ function handleApiLogin(req, res) {
     }
   });
   req.on("end", () => {
-    try {
-      // get creds from body
-      const creds = JSON.parse(body);
-      const { username, password } = creds;
-      const users = parseUsers();
-      // find matching user
-      const matched = users.find(
-        (u) => u.username === username && u.password === password,
-      );
+    let creds;
 
-      if (matched) {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(
-          JSON.stringify({ success: true, accountType: matched.accountType }),
-        );
-      } else {
-        res.writeHead(401, { "Content-Type": "application/json" });
-        res.end(
-          JSON.stringify({ success: false, message: "Invalid credentials" }),
-        );
-      }
+    // parse, if invalid return 400
+    try {
+      creds = JSON.parse(body);
     } catch (err) {
       res.writeHead(400, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ success: false, message: "Bad request" }));
+      res.end(JSON.stringify({ success: false, message: "Invalid JSON" }));
+      return;
+    }
+
+    const { username, password } = creds || {};
+    // validate
+    if (!username || !password) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({ success: false, message: "Username and password required" }),
+      );
+      return;
+    }
+
+    // check user db
+    const users = parseUsers();
+    if (users === null) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({ success: false, message: "Failed to load users database" }),
+      );
+      return;
+    }
+
+    // find matching user
+    const matched = users.find(
+      (u) => u.username === username && u.password === password,
+    );
+
+    if (matched) {
+      // success
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({ success: true, accountType: matched.accountType }),
+      );
+    } else {
+      // fail
+      res.writeHead(401, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({ success: false, message: "Invalid credentials" }),
+      );
     }
   });
 }
@@ -226,61 +258,76 @@ function handleApiRegister(req, res) {
   });
 
   req.on("end", () => {
-    try {
-      const data = JSON.parse(body);
-      const { username, password, confirmPassword } = data;
-      // validation
-      if (!username || !password || !confirmPassword) {
-        res.writeHead(400, { "Content-Type": "application/json" });
-        res.end(
-          JSON.stringify({
-            success: false,
-            message: "All fields are required",
-          }),
-        );
-        return;
-      }
-      if (password !== confirmPassword) {
-        res.writeHead(400, { "Content-Type": "application/json" });
-        res.end(
-          JSON.stringify({ success: false, message: "Passwords do not match" }),
-        );
-        return;
-      }
-      // check if user exists
-      const users = parseUsers();
-      const exists = users.some(
-        (u) => u.username.toLowerCase() === username.toLowerCase(),
-      );
-      if (exists) {
-        res.writeHead(409, { "Content-Type": "application/json" });
-        res.end(
-          JSON.stringify({
-            success: false,
-            message: "Username already exists",
-          }),
-        );
-        return;
-      }
-      // save to db
-      let filePath = path.join(__dirname, "private/users.csv");
-      const line = `\n${username},${password},user`;
+    let payload;
 
-      try {
-        fs.appendFileSync(filePath, line);
-      } catch (err) {
-        res.writeHead(500, { "Content-Type": "application/json" });
-        res.end(
-          JSON.stringify({ success: false, message: "Failed to save user" }),
-        );
-        return;
-      }
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ success: true, username: username }));
+    // parse
+    try {
+      payload = JSON.parse(body);
     } catch (err) {
       res.writeHead(400, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ success: false, message: "Bad request" }));
+      res.end(JSON.stringify({ success: false, message: "Invalid JSON" }));
+      return;
     }
+
+    const { username, password, confirmPassword } = payload || {};
+    // validate
+    if (!username || !password || !confirmPassword) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({ success: false, message: "All fields are required" }),
+      );
+      return;
+    }
+
+    // check confirm password
+    if (password !== confirmPassword) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({ success: false, message: "Passwords do not match" }),
+      );
+      return;
+    }
+
+    // check user db
+    const users = parseUsers();
+    if (users === null) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({ success: false, message: "Failed to load users database" }),
+      );
+      return;
+    }
+
+    // check if exists
+    const exists = users.some(
+      (u) => u.username.toLowerCase() === username.toLowerCase(),
+    );
+
+    if (exists) {
+      // if does not exist
+      res.writeHead(409, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({ success: false, message: "Username already exists" }),
+      );
+      return;
+    }
+
+    // save to db
+    let filePath = path.join(__dirname, "private/users.csv");
+    const line = `\n${username},${password},user`;
+    try {
+      fs.appendFileSync(filePath, line);
+    } catch (err) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({ success: false, message: "Failed to save user" }),
+      );
+      return;
+    }
+
+    // success
+    res.writeHead(201, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ success: true, username: username }));
   });
 }
 
