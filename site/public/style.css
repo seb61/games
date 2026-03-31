@@ -283,6 +283,12 @@ body {
   height: 14px;
   flex-shrink: 0;
 }
+.movie-card .imdb-rating {
+  color: #f5c518;
+}
+.movie-card .my-rating {
+  color: #4caf50;
+}
 
 /* notes icon */
 .notes-icon-button {

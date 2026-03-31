@@ -98,7 +98,7 @@ function MovieCard({ movie, onRate, onEdit }) {
         // rating
         React.createElement(
           "span",
-          { key: "imdb", className: "meta-item" },
+          { key: "imdb", className: "meta-item imdb-rating" },
           [
             React.createElement(Icon, { key: "icon", path: starPath }),
             React.createElement(
@@ -111,7 +111,7 @@ function MovieCard({ movie, onRate, onEdit }) {
         // my rating
         React.createElement(
           "span",
-          { key: "my", className: "meta-item" },
+          { key: "my", className: "meta-item my-rating" },
           [
             React.createElement(Icon, { key: "icon", path: starPath }),
             React.createElement(
