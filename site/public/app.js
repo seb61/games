@@ -8,6 +8,8 @@ const { useState, useEffect } = React;
  * Docs:
  * - https://react.dev/reference/react/hooks
  * - https://developer.themoviedb.org/reference/search-movie
+ * - https://www.geeksforgeeks.org/reactjs/how-to-hide-your-api-keys-from-public-in-reactjs/
+ * - https://dzone.com/articles/hide-your-api-keys-with-an-api-proxy-server
  */
 
 // App manages auth, movie data, and overlays.
