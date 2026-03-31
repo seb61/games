@@ -1,5 +1,29 @@
 // MovieCard renders a movie's poster, and its metadata
 function MovieCard({ movie, onRate, onEdit }) {
+  // note overlay states
+  const [showNotes, setShowNotes] = useState(false);
+  const [notes, setNotes] = useState("");
+
+  // renders a small svg icon
+  const Icon = ({ path }) =>
+    React.createElement(
+      "svg",
+      {
+        width: 14,
+        height: 14,
+        viewBox: "0 0 16 16",
+        fill: "currentColor",
+        xmlns: "http://www.w3.org/2000/svg",
+      },
+      [React.createElement("path", { key: "p", d: path })],
+    );
+
+  // icons
+  const calendarPath =
+    "M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V5h16V4H0V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5";
+  const starPath =
+    "M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z";
+
   return React.createElement("div", { className: "movie-card" }, [
     // edit button at top right of card
     React.createElement(
@@ -47,11 +71,123 @@ function MovieCard({ movie, onRate, onEdit }) {
       { key: "title", className: "movie-title" },
       movie.title,
     ),
+    // metadata
+    React.createElement(
+      "div",
+      { key: "meta", className: "movie-meta" },
+      [
+        // release year
+        React.createElement(
+          "span",
+          { key: "year", className: "meta-item" },
+          [
+            React.createElement(Icon, { key: "icon", path: calendarPath }),
+            React.createElement(
+              "span",
+              { key: "text", className: "meta-text" },
+              movie.releaseYear || "N/A",
+            ),
+          ],
+        ),
+        // rating
+        React.createElement(
+          "span",
+          { key: "imdb", className: "meta-item" },
+          [
+            React.createElement(Icon, { key: "icon", path: starPath }),
+            React.createElement(
+              "span",
+              { key: "text", className: "meta-text" },
+              movie.imdbRating ? String(movie.imdbRating) : "N/A",
+            ),
+          ],
+        ),
+        // my rating
+        React.createElement(
+          "span",
+          { key: "my", className: "meta-item" },
+          [
+            React.createElement(Icon, { key: "icon", path: starPath }),
+            React.createElement(
+              "span",
+              { key: "text", className: "meta-text" },
+              movie.rating ? String(movie.rating) : "N/A",
+            ),
+          ],
+        ),
+      ],
+    ),
     // movie description
     React.createElement(
       "p",
       { key: "desc", className: "movie-description" },
       movie.description,
+    ),
+    // see notes button
+    React.createElement(
+      "button",
+      {
+        key: "notesBtn",
+        className: "notes-icon-button",
+        type: "button",
+        onClick: () => setShowNotes(true),
+        title: "See notes",
+        "aria-label": "See notes",
+      },
+      [
+        // icon
+        React.createElement(
+          "svg",
+          {
+            key: "icon",
+            width: 16,
+            height: 16,
+            viewBox: "0 0 24 24",
+            fill: "none",
+            xmlns: "http://www.w3.org/2000/svg",
+          },
+          [
+            React.createElement("rect", {
+              key: "r1",
+              x: 4,
+              y: 4,
+              width: 16,
+              height: 16,
+              stroke: "currentColor",
+              fill: "none",
+              rx: 2,
+            }),
+            React.createElement("line", {
+              key: "l1",
+              x1: 6,
+              y1: 8,
+              x2: 18,
+              y2: 8,
+              stroke: "currentColor",
+              strokeWidth: 2,
+            }),
+            React.createElement("line", {
+              key: "l2",
+              x1: 6,
+              y1: 12,
+              x2: 18,
+              y2: 12,
+              stroke: "currentColor",
+              strokeWidth: 2,
+            }),
+            React.createElement("line", {
+              key: "l3",
+              x1: 6,
+              y1: 16,
+              x2: 18,
+              y2: 16,
+              stroke: "currentColor",
+              strokeWidth: 2,
+            }),
+          ],
+        ),
+        React.createElement("span", { key: "lbl" }, "Notes"),
+      ],
     ),
     // rating component
     React.createElement(window.StarRating, {
@@ -59,8 +195,45 @@ function MovieCard({ movie, onRate, onEdit }) {
       rating: movie.rating,
       onRate: (value) => onRate && onRate(movie.id, value),
     }),
+    // notes overlay
+    showNotes
+      ? React.createElement(
+          "div",
+          { key: "notesOverlay", className: "model-overlay" },
+          React.createElement("div", { className: "model" }, [
+            React.createElement(
+              "h3",
+              { key: "h" },
+              `Notes for ${movie.title}`,
+            ),
+            React.createElement("textarea", {
+              key: "ta",
+              className: "notes-textarea",
+              value: notes,
+              onChange: (e) => setNotes(e.target.value),
+              placeholder: "Enter your notes here...",
+            }),
+            React.createElement(
+              "div",
+              { key: "actions", className: "model-actions" },
+              [
+                React.createElement(
+                  "button",
+                  {
+                    key: "close",
+                    type: "button",
+                    className: "btn btn-confirm",
+                    onClick: () => setShowNotes(false),
+                  },
+                  "Close",
+                ),
+              ],
+            ),
+          ]),
+        )
+      : null,
   ]);
 }
 
-// makes it global
+// expose component globally
 window.MovieCard = MovieCard;

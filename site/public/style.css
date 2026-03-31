@@ -262,6 +262,64 @@ body {
   text-align: center;
 }
 
+/*
+  movie metadata
+*/
+.movie-card .movie-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #aaaaaa;
+  margin-bottom: 6px;
+  justify-content: center;
+}
+.movie-card .meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.movie-card .movie-meta svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* notes icon */
+.notes-icon-button {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-size: 12px;
+}
+.notes-icon-button:hover {
+  color: #ffcc80;
+}
+.notes-icon-button svg {
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+/* notes textarea */
+.notes-textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  background-color: #1c1c1c;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e0e0e0;
+  padding: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
 /* all star rating styles */
 .rating {
   display: flex;
