@@ -96,13 +96,18 @@ function App({ initialLoggedIn = false }) {
       .then((data) => {
         if (!Array.isArray(data)) return; // if not array, return
         // maps to MovieCard format
-        const transformed = data.map((movie, index) => ({
-          id: index + 1,
-          title: movie.title,
-          description: movie.description,
-          poster: movie.coverImage || "",
-          rating: Number(movie.rating) || 0,
-        }));
+        const transformed = data.map((movie, index) => {
+          return {
+            id: index + 1,
+            title: movie.title,
+            description: movie.description,
+            poster: movie.coverImage || "",
+            // metadata
+            rating: Number(movie.rating) || 0,
+            releaseYear: movie["release-year"] || "",
+            imdbRating: movie.rating || "",
+          };
+        });
         setMovies(transformed);
         setNextId(transformed.length + 1);
       })
@@ -1038,15 +1043,15 @@ function App({ initialLoggedIn = false }) {
 ReactDOM.render(React.createElement(App), document.getElementById("root"));
 
 // fixed to use React 18 syntax
-const { createRoot } = require("react-dom/client");
+// const { createRoot } = require("react-dom/client");
 
-if (typeof document !== "undefined") {
-  const rootEl = document.getElementById("root");
-  if (rootEl) {
-    const root = createRoot(rootEl);
-    root.render(React.createElement(App));
-  }
-}
+// if (typeof document !== "undefined") {
+//   const rootEl = document.getElementById("root");
+//   if (rootEl) {
+//     const root = createRoot(rootEl);
+//     root.render(React.createElement(App));
+//   }
+// }
 
 // export app to avoid auto render issues
-module.exports = App;
+// module.exports = App;
