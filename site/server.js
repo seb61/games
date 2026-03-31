@@ -1,6 +1,7 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const https = require("https");
 
 const PORT = process.env.PORT || 3000;
 // public dir
@@ -109,6 +110,67 @@ function handleApiMovies(res) {
   const movies = parseMovies();
   res.writeHead(200, { "Content-Type": "application/json" });
   res.end(JSON.stringify(movies));
+}
+
+// GET /api/tmdb-search?query=...&limit=...
+function handleApiTmdbSearch(req, res) {
+  // parse the URL to extract query and limit parameters
+  const urlObj = new URL(req.url, `http://${req.headers.host}`);
+  const queryParam = urlObj.searchParams.get("query");
+  const limitParam = parseInt(urlObj.searchParams.get("limit"), 10);
+  const limit = isNaN(limitParam) ? 5 : Math.max(1, limitParam);
+
+  // reject if no query provided
+  if (!queryParam) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ success: false, message: "Query parameter required" }));
+    return;
+  }
+
+  // ensure an API key is available
+  const apiKey = process.env.TMDB_API_KEY || "8e8e6903634e4456e06bdd740af13ca6"; // hardcode cuz y not
+  if (!apiKey) {
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ success: false, message: "TMDb API key not configured" }));
+    return;
+  }
+
+  // build the TMDB url
+  const tmdbUrl = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(queryParam)}`;
+
+  // send the request
+  https
+    .get(tmdbUrl, (apiRes) => {
+      let data = "";
+      // response
+      apiRes.on("data", (chunk) => {
+        data += chunk.toString();
+      });
+      apiRes.on("end", () => {
+        try {
+          const json = JSON.parse(data);
+          const results = Array.isArray(json.results) ? json.results : []; // check if array
+          // collect poster URls
+          const posters = results
+            .filter((item) => item.poster_path)
+            .slice(0, limit)
+            .map((item) => `https://image.tmdb.org/t/p/w500${item.poster_path}`);
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ success: true, posters: posters }));
+        } catch (err) {
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(
+            JSON.stringify({ success: false, message: "Failed to parse TMDb response" }),
+          );
+        }
+      });
+    })
+    .on("error", (err) => {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({ success: false, message: "Error communicating with TMDb" }),
+      );
+    });
 }
 
 // POST /api/login
@@ -272,6 +334,10 @@ const server = http.createServer((req, res) => {
   }
   if (req.url === "/api/register" && req.method === "POST") {
     handleApiRegister(req, res);
+    return;
+  }
+  if (req.url.startsWith("/api/tmdb-search") && req.method === "GET") {
+    handleApiTmdbSearch(req, res);
     return;
   }
   serveStatic(req, res);

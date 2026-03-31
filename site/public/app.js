@@ -85,22 +85,15 @@ function App({ initialLoggedIn = false }) {
     }
     // calls API after user stops typing for 0.8s
     const handler = setTimeout(() => {
-      const apiKey = "8e8e6903634e4456e06bdd740af13ca6";
       const query = encodeURIComponent(newTitle);
+      
       // call the search API
-      fetch(
-        `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${query}`,
-      )
+      fetch(`/api/tmdb-search?query=${query}&limit=5`)
         .then((res) => res.json())
         .then((data) => {
-          if (data && Array.isArray(data.results)) {
+          if (data && data.success && Array.isArray(data.posters)) {
             // build image
-            const options = data.results
-              .filter((item) => item.poster_path)
-              .slice(0, 5)
-              .map(
-                (item) => `https://image.tmdb.org/t/p/w500${item.poster_path}`,
-              );
+            const options = data.posters;
             setPosterOptions(options);
             setSelectedPoster(options[0] || "");
           }
@@ -122,20 +115,12 @@ function App({ initialLoggedIn = false }) {
     }
     // calls API after user stops typing for 0.8s
     const handler = setTimeout(() => {
-      const apiKey = "8e8e6903634e4456e06bdd740af13ca6";
       const query = encodeURIComponent(editTitle);
-      fetch(
-        `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${query}`,
-      )
+      fetch(`/api/tmdb-search?query=${query}&limit=5`)
         .then((res) => res.json())
         .then((data) => {
-          if (data && Array.isArray(data.results)) {
-            const options = data.results
-              .filter((item) => item.poster_path)
-              .slice(0, 5)
-              .map(
-                (item) => `https://image.tmdb.org/t/p/w500${item.poster_path}`,
-              );
+          if (data && data.success && Array.isArray(data.posters)) {
+            const options = data.posters;
             setEditPosterOptions(options);
             setEditSelectedPoster(options[0] || ""); // default to first option
           }
@@ -157,22 +142,12 @@ function App({ initialLoggedIn = false }) {
       return;
     }
     const handler = setTimeout(() => {
-      const apiKey = "8e8e6903634e4456e06bdd740af13ca6";
       const query = encodeURIComponent(posterSearchInput);
-      fetch(
-        `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${query}`,
-      )
+      fetch(`/api/tmdb-search?query=${query}&limit=10`)
         .then((res) => res.json())
         .then((data) => {
-          if (data && Array.isArray(data.results)) {
-            const options = data.results
-              .filter((item) => item.poster_path)
-              .slice(0, 10)
-              .map(
-                (item) =>
-                  `https://image.tmdb.org/t/p/w500${item.poster_path}`,
-              );
-            setPosterSearchResults(options);
+          if (data && data.success && Array.isArray(data.posters)) {
+            setPosterSearchResults(data.posters);
           }
         })
         .catch(() => {
