@@ -3,9 +3,15 @@
  *  - https://www.geeksforgeeks.org/reactjs/create-a-modal-component-using-react-hooks/
  */
 
-
 // MovieCard renders a movie's poster, and its metadata
-function MovieCard({ movie, onRate, onEdit, isAdmin = false, isGlobalView = false, onDelete }) {
+function MovieCard({
+  movie,
+  onRate,
+  onEdit,
+  isAdmin = false,
+  isGlobalView = false,
+  onDelete,
+}) {
   // note overlay states
   const [showNotes, setShowNotes] = useState(false);
   const [notes, setNotes] = useState("");
@@ -15,7 +21,8 @@ function MovieCard({ movie, onRate, onEdit, isAdmin = false, isGlobalView = fals
   const desc = movie.description || "";
   const maxLength = 200;
   const isLong = desc.length > maxLength;
-  const displayedDesc = !expanded && isLong ? desc.slice(0, maxLength) + "..." : desc;
+  const displayedDesc =
+    !expanded && isLong ? desc.slice(0, maxLength) + "..." : desc;
 
   // renders a small svg icon
   const Icon = ({ path }) =>
@@ -81,39 +88,40 @@ function MovieCard({ movie, onRate, onEdit, isAdmin = false, isGlobalView = fals
           ),
         )
       : onEdit
-      ? React.createElement( // edit button at top right of card
-          "button",
-          {
-            key: "edit",
-            className: "edit-icon-button",
-            title: "Edit",
-            "aria-label": "Edit movie",
-            onClick: () => onEdit && onEdit(movie.id),
-          },
-          React.createElement(
-            "svg",
+        ? React.createElement(
+            // edit button at top right of card
+            "button",
             {
-              width: 20,
-              height: 20,
-              viewBox: "0 0 24 24",
-              fill: "none",
-              xmlns: "http://www.w3.org/2000/svg",
+              key: "edit",
+              className: "edit-icon-button",
+              title: "Edit",
+              "aria-label": "Edit movie",
+              onClick: () => onEdit && onEdit(movie.id),
             },
-            [
-              React.createElement("path", {
-                key: "p1",
-                d: "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z",
-                fill: "currentColor",
-              }),
-              React.createElement("path", {
-                key: "p2",
-                d: "M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z",
-                fill: "currentColor",
-              }),
-            ],
-          ),
-        )
-      : null,
+            React.createElement(
+              "svg",
+              {
+                width: 20,
+                height: 20,
+                viewBox: "0 0 24 24",
+                fill: "none",
+                xmlns: "http://www.w3.org/2000/svg",
+              },
+              [
+                React.createElement("path", {
+                  key: "p1",
+                  d: "M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25z",
+                  fill: "currentColor",
+                }),
+                React.createElement("path", {
+                  key: "p2",
+                  d: "M20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z",
+                  fill: "currentColor",
+                }),
+              ],
+            ),
+          )
+        : null,
     // movie image
     React.createElement("img", {
       key: "img",
@@ -127,71 +135,59 @@ function MovieCard({ movie, onRate, onEdit, isAdmin = false, isGlobalView = fals
       movie.title,
     ),
     // metadata
-    React.createElement(
-      "div",
-      { key: "meta", className: "movie-meta" },
-      [
-        // release year
+    React.createElement("div", { key: "meta", className: "movie-meta" }, [
+      // release year
+      React.createElement("span", { key: "year", className: "meta-item" }, [
+        React.createElement(Icon, { key: "icon", path: calendarPath }),
         React.createElement(
           "span",
-          { key: "year", className: "meta-item" },
-          [
-            React.createElement(Icon, { key: "icon", path: calendarPath }),
-            React.createElement(
-              "span",
-              { key: "text", className: "meta-text" },
-              movie.releaseYear || "N/A",
-            ),
-          ],
+          { key: "text", className: "meta-text" },
+          movie.releaseYear || "N/A",
         ),
-        // rating
-        React.createElement(
-          "span",
-          { key: "imdb", className: "meta-item imdb-rating" },
-          [
-            React.createElement(Icon, { key: "icon", path: starPath }),
-            React.createElement(
-              "span",
-              { key: "text", className: "meta-text" },
-              movie.imdbRating ? String(movie.imdbRating) : "N/A",
-            ),
-          ],
-        ),
-        // my rating
-        React.createElement(
-          "span",
-          { key: "my", className: "meta-item my-rating" },
-          [
-            React.createElement(Icon, { key: "icon", path: starPath }),
-            React.createElement(
-              "span",
-              { key: "text", className: "meta-text" },
-              movie.rating ? String(movie.rating) : "N/A",
-            ),
-          ],
-        ),
-      ],
-    ),
+      ]),
+      // rating
+      React.createElement(
+        "span",
+        { key: "imdb", className: "meta-item imdb-rating" },
+        [
+          React.createElement(Icon, { key: "icon", path: starPath }),
+          React.createElement(
+            "span",
+            { key: "text", className: "meta-text" },
+            movie.imdbRating ? String(movie.imdbRating) : "N/A",
+          ),
+        ],
+      ),
+      // my rating
+      React.createElement(
+        "span",
+        { key: "my", className: "meta-item my-rating" },
+        [
+          React.createElement(Icon, { key: "icon", path: starPath }),
+          React.createElement(
+            "span",
+            { key: "text", className: "meta-text" },
+            movie.rating ? String(movie.rating) : "N/A",
+          ),
+        ],
+      ),
+    ]),
     // movie description
-    React.createElement(
-      "p",
-      { key: "desc", className: "movie-description" },
-      [
-        displayedDesc,
-        isLong
-          ? React.createElement(
-              "button",
-              {
-                key: "toggle",
-                className: "show-more-btn",
-                type: "button",
-                onClick: () => setExpanded(!expanded),
-              },
-              expanded ? " Show less" : " Show more",
-            )
-          : null,
-      ],
-    ),
+    React.createElement("p", { key: "desc", className: "movie-description" }, [
+      displayedDesc,
+      isLong
+        ? React.createElement(
+            "button",
+            {
+              key: "toggle",
+              className: "show-more-btn",
+              type: "button",
+              onClick: () => setExpanded(!expanded),
+            },
+            expanded ? " Show less" : " Show more",
+          )
+        : null,
+    ]),
     // see notes button
     React.createElement(
       "button",
