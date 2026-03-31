@@ -76,7 +76,7 @@ function App({ initialLoggedIn = false }) {
     fetch("/api/movies")
       .then(async (res) => {
         let data = [];
-        
+
         // parse
         try {
           data = await res.json();
@@ -86,7 +86,8 @@ function App({ initialLoggedIn = false }) {
 
         if (!res.ok) {
           // if error
-          const message = data && data.message ? data.message : "Failed to fetch movies";
+          const message =
+            data && data.message ? data.message : "Failed to fetch movies";
           console.error(message);
           return [];
         }
@@ -333,7 +334,8 @@ function App({ initialLoggedIn = false }) {
           // error handle
           const status = res.status;
           let message = (data && data.message) || "Registration failed";
-          if (status === 409) message = data.message || "Username already exists";
+          if (status === 409)
+            message = data.message || "Username already exists";
           else if (status === 400) message = data.message || "Bad request";
           else if (status === 500) message = data.message || "Server error";
           setRegisterError(message);

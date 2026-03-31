@@ -112,7 +112,10 @@ function handleApiMovies(res) {
   if (movies === null) {
     res.writeHead(500, { "Content-Type": "application/json" });
     res.end(
-      JSON.stringify({ success: false, message: "Failed to load movies database" }),
+      JSON.stringify({
+        success: false,
+        message: "Failed to load movies database",
+      }),
     );
     return;
   }
@@ -131,7 +134,9 @@ function handleApiTmdbSearch(req, res) {
   // reject if no query provided
   if (!queryParam) {
     res.writeHead(400, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ success: false, message: "Query parameter required" }));
+    res.end(
+      JSON.stringify({ success: false, message: "Query parameter required" }),
+    );
     return;
   }
 
@@ -139,7 +144,12 @@ function handleApiTmdbSearch(req, res) {
   const apiKey = process.env.TMDB_API_KEY || "8e8e6903634e4456e06bdd740af13ca6"; // hardcode cuz y not
   if (!apiKey) {
     res.writeHead(500, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ success: false, message: "TMDb API key not configured" }));
+    res.end(
+      JSON.stringify({
+        success: false,
+        message: "TMDb API key not configured",
+      }),
+    );
     return;
   }
 
@@ -162,13 +172,18 @@ function handleApiTmdbSearch(req, res) {
           const posters = results
             .filter((item) => item.poster_path)
             .slice(0, limit)
-            .map((item) => `https://image.tmdb.org/t/p/w500${item.poster_path}`);
+            .map(
+              (item) => `https://image.tmdb.org/t/p/w500${item.poster_path}`,
+            );
           res.writeHead(200, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ success: true, posters: posters }));
         } catch (err) {
           res.writeHead(500, { "Content-Type": "application/json" });
           res.end(
-            JSON.stringify({ success: false, message: "Failed to parse TMDb response" }),
+            JSON.stringify({
+              success: false,
+              message: "Failed to parse TMDb response",
+            }),
           );
         }
       });
@@ -176,7 +191,10 @@ function handleApiTmdbSearch(req, res) {
     .on("error", (err) => {
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(
-        JSON.stringify({ success: false, message: "Error communicating with TMDb" }),
+        JSON.stringify({
+          success: false,
+          message: "Error communicating with TMDb",
+        }),
       );
     });
 }
@@ -210,7 +228,10 @@ function handleApiLogin(req, res) {
     if (!username || !password) {
       res.writeHead(400, { "Content-Type": "application/json" });
       res.end(
-        JSON.stringify({ success: false, message: "Username and password required" }),
+        JSON.stringify({
+          success: false,
+          message: "Username and password required",
+        }),
       );
       return;
     }
@@ -220,7 +241,10 @@ function handleApiLogin(req, res) {
     if (users === null) {
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(
-        JSON.stringify({ success: false, message: "Failed to load users database" }),
+        JSON.stringify({
+          success: false,
+          message: "Failed to load users database",
+        }),
       );
       return;
     }
@@ -293,7 +317,10 @@ function handleApiRegister(req, res) {
     if (users === null) {
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(
-        JSON.stringify({ success: false, message: "Failed to load users database" }),
+        JSON.stringify({
+          success: false,
+          message: "Failed to load users database",
+        }),
       );
       return;
     }
