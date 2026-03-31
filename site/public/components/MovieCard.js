@@ -1,3 +1,9 @@
+/**
+ * Docs:
+ *  - https://www.geeksforgeeks.org/reactjs/create-a-modal-component-using-react-hooks/
+ */
+
+
 // MovieCard renders a movie's poster, and its metadata
 function MovieCard({ movie, onRate, onEdit }) {
   // note overlay states
