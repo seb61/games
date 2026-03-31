@@ -10,6 +10,7 @@ const { useEffect } = React;
  * - https://developer.themoviedb.org/reference/search-movie
  * - https://www.geeksforgeeks.org/reactjs/how-to-hide-your-api-keys-from-public-in-reactjs/
  * - https://dzone.com/articles/hide-your-api-keys-with-an-api-proxy-server
+ * - https://www.geeksforgeeks.org/software-engineering/dont-repeat-yourselfdry-in-software-development/
  */
 
 // helper func to search for posters
