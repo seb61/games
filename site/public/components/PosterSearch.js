@@ -3,7 +3,7 @@ const { createElement } = React;
 
 /**
  * PosterSearch
- * 
+ *
  * isOpen: whether the overlay should be visible
  * query: search value
  * onQueryChange: update search value
@@ -58,22 +58,18 @@ function PosterSearchOverlay({
         ),
       ),
       // close button
-      createElement(
-        "div",
-        { key: "actions", className: "model-actions" },
-        [
-          createElement(
-            "button",
-            {
-              key: "closeBtn",
-              type: "button",
-              className: "btn btn-cancel",
-              onClick: () => onClose && onClose(), // if it exists, call
-            },
-            "Close",
-          ),
-        ],
-      ),
+      createElement("div", { key: "actions", className: "model-actions" }, [
+        createElement(
+          "button",
+          {
+            key: "closeBtn",
+            type: "button",
+            className: "btn btn-cancel",
+            onClick: () => onClose && onClose(), // if it exists, call
+          },
+          "Close",
+        ),
+      ]),
     ]),
   );
 }
