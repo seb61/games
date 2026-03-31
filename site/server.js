@@ -2,6 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
+const crypto = require("crypto");
 
 const PORT = process.env.PORT || 3000;
 // public dir
@@ -16,6 +17,7 @@ const publicDir = path.join(__dirname, "public");
  * - https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication (auth)
  * - https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
  * - https://jasonwatmore.com/post/2021/10/09/fetch-error-handling-for-failed-http-responses-and-network-errors
+ * - https://nodejs.org/api/crypto.html
  */
 
 /**
@@ -105,6 +107,15 @@ function parseUsers() {
     });
   }
   return users;
+}
+
+/**
+ * hashes a password using sha-256
+ * @param {string} password plain text password
+ * @returns {string} sha-256 hash of the password
+ */
+function hashPassword(password) {
+  return crypto.createHash("sha256").update(password).digest("hex");
 }
 
 // GET /api/movies
@@ -252,8 +263,11 @@ function handleApiLogin(req, res) {
     }
 
     // find matching user
+    const hashedInput = hashPassword(password);
     const matched = users.find(
-      (u) => u.username === username && u.password === password,
+      (u) =>
+        u.username === username &&
+        (u.password === hashedInput || u.password === password), // can still be plain text
     );
 
     if (matched) {
@@ -342,8 +356,12 @@ function handleApiRegister(req, res) {
     }
 
     // save to db
+    const hashed = hashPassword(password);
     let filePath = path.join(__dirname, "private/users.csv");
-    const line = `\n${username},${password},user`;
+    
+    const line = `\n${username},${hashed},user`;
+
+    // if fail, return 500
     try {
       fs.appendFileSync(filePath, line);
     } catch (err) {
