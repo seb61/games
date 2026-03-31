@@ -14,6 +14,8 @@ const publicDir = path.join(__dirname, "public");
  * - https://developer.mozilla.org/en-US/docs/Glossary/REST & https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API (setting up api's)
  * - https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Server-side/Node_server_without_framework (static serving)
  * - https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication (auth)
+ * - https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status
+ * - https://jasonwatmore.com/post/2021/10/09/fetch-error-handling-for-failed-http-responses-and-network-errors
  */
 
 /**
