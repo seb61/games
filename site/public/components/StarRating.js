@@ -1,4 +1,6 @@
 // star rating system
+const { useState } = React;
+
 function StarRating({ rating, onRate }) {
   const [hoverValue, setHoverValue] = useState(0);
   return React.createElement(

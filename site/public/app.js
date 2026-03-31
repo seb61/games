@@ -2,7 +2,7 @@
 // const React = require('react');
 // const ReactDOM = require('react-dom');
 
-const { useState, useEffect } = React;
+const { useEffect } = React;
 
 /**
  * Docs:
@@ -11,6 +11,20 @@ const { useState, useEffect } = React;
  * - https://www.geeksforgeeks.org/reactjs/how-to-hide-your-api-keys-from-public-in-reactjs/
  * - https://dzone.com/articles/hide-your-api-keys-with-an-api-proxy-server
  */
+
+// helper func to search for posters
+function searchPosters(title, limit = 5) {
+  const query = encodeURIComponent(title);
+  return fetch(`/api/tmdb-search?query=${query}&limit=${limit}`)
+    .then((res) => res.json())
+    .then((data) => {
+      if (data && data.success && Array.isArray(data.posters)) {
+        return data.posters;
+      }
+      return [];
+    })
+    .catch(() => []);
+}
 
 // App manages auth, movie data, and overlays.
 function App({ initialLoggedIn = false }) {
@@ -87,22 +101,11 @@ function App({ initialLoggedIn = false }) {
     }
     // calls API after user stops typing for 0.8s
     const handler = setTimeout(() => {
-      const query = encodeURIComponent(newTitle);
-      
-      // call the search API
-      fetch(`/api/tmdb-search?query=${query}&limit=5`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data && data.success && Array.isArray(data.posters)) {
-            // build image
-            const options = data.posters;
-            setPosterOptions(options);
-            setSelectedPoster(options[0] || "");
-          }
-        })
-        .catch(() => {
-          // ignore for now
-        });
+      // fetch
+      searchPosters(newTitle, 5).then((options) => {
+        setPosterOptions(options);
+        setSelectedPoster(options[0] || "");
+      });
     }, 800);
     return () => clearTimeout(handler);
   }, [newTitle]);
@@ -117,19 +120,11 @@ function App({ initialLoggedIn = false }) {
     }
     // calls API after user stops typing for 0.8s
     const handler = setTimeout(() => {
-      const query = encodeURIComponent(editTitle);
-      fetch(`/api/tmdb-search?query=${query}&limit=5`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data && data.success && Array.isArray(data.posters)) {
-            const options = data.posters;
-            setEditPosterOptions(options);
-            setEditSelectedPoster(options[0] || ""); // default to first option
-          }
-        })
-        .catch(() => {
-          // ignore errors for now
-        });
+      // fetch
+      searchPosters(editTitle, 5).then((options) => {
+        setEditPosterOptions(options);
+        setEditSelectedPoster(options[0] || "");
+      });
     }, 800);
     return () => clearTimeout(handler);
   }, [editTitle, showEditModal]);
@@ -144,17 +139,10 @@ function App({ initialLoggedIn = false }) {
       return;
     }
     const handler = setTimeout(() => {
-      const query = encodeURIComponent(posterSearchInput);
-      fetch(`/api/tmdb-search?query=${query}&limit=10`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data && data.success && Array.isArray(data.posters)) {
-            setPosterSearchResults(data.posters);
-          }
-        })
-        .catch(() => {
-          // ignore errors
-        });
+      // fetch
+      searchPosters(posterSearchInput, 10).then((options) => {
+        setPosterSearchResults(options);
+      });
     }, 800);
     return () => clearTimeout(handler);
   }, [posterSearchInput, showPosterSearchModal]);
