@@ -635,10 +635,218 @@ function App({ initialLoggedIn = false }) {
     setShowPosterSearchModal(false);
   };
 
+  /**
+   * Helper for title suggestions, copies metadata from suggestion to form
+   * @param {Object} suggestion suggested movie returned from API
+   */
+  const handleTitleSuggestionClick = (suggestion) => {
+    setNewTitle(suggestion.title || "");
+    setNewDesc(suggestion.description || "");
+    setAutoReleaseYear(suggestion.releaseYear || "");
+    setAutoImdbRating(suggestion.imdbRating || "");
+
+    if (suggestion.poster) {
+      setSelectedPoster(suggestion.poster);
+      setPosterOptions([suggestion.poster]);
+    }
+    setTitleSuggestions([]);
+  };
+
+  /**
+   * Helper for title suggestions in the edit form
+   * @param {Object} suggestion suggested movie returned from API
+   */
+  const handleEditTitleSuggestionClick = (suggestion) => {
+    setEditTitle(suggestion.title || "");
+    setEditDesc(suggestion.description || "");
+    setEditReleaseYear(suggestion.releaseYear || "");
+    setEditImdbRating(suggestion.imdbRating || "");
+
+    if (suggestion.poster) {
+      setEditSelectedPoster(suggestion.poster);
+      setEditPosterOptions([suggestion.poster]);
+    }
+    setEditTitleSuggestions([]);
+  };
+
   // handle search bar
   const filteredMovies = movies.filter((m) =>
     m.title.toLowerCase().includes(searchQuery.trim().toLowerCase()),
   );
+
+  // fetches and populates the users personal catalogue
+  const fetchMyCatalogue = async () => {
+    if (!currentUser) return;
+
+    try {
+      const res = await fetch(
+        `/api/my-catalogue?username=${encodeURIComponent(currentUser)}`,
+      );
+      // response
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (err) {
+        data = {};
+      }
+
+      // validate
+      if (!res.ok || !data || !Array.isArray(data.movies)) {
+        return;
+      }
+
+      // maps to MovieCard format
+      const tempList = data.movies.map((movie, idx) => ({
+        id: idx + 1,
+        title: movie.title,
+        description: movie.description,
+        poster: movie.coverImage || "",
+        rating: Number(movie.rating) || 0,
+        releaseYear: movie.releaseYear || "",
+        imdbRating: "",
+      }));
+
+      // fill missing metadata from tmdb
+      const updated = await Promise.all(
+        tempList.map(async (m) => {
+          const updatedMovie = { ...m };
+          if (!m.releaseYear || !m.imdbRating) {
+            try {
+              const resDetails = await fetch(
+                `/api/tmdb-details?query=${encodeURIComponent(m.title)}`,
+              );
+
+              // response
+              let details = {};
+              try {
+                details = await resDetails.json();
+              } catch (err) {
+                details = {};
+              }
+
+              // update only if missing
+              if (resDetails.ok && details && details.success) {
+                if (!m.releaseYear && details.releaseYear) {
+                  updatedMovie.releaseYear = details.releaseYear;
+                }
+                if (!m.imdbRating && details.imdbRating) {
+                  updatedMovie.imdbRating = details.imdbRating;
+                }
+                if (details.description && !updatedMovie.description) {
+                  updatedMovie.description = details.description;
+                }
+              }
+            } catch (err) {
+              // ignore
+            }
+          }
+          return updatedMovie;
+        }),
+      );
+      setMyMovies(updated);
+      setNextId(updated.length + 1); // blank space
+    } catch (err) {
+      console.error("Failed to fetch my catalogue", err);
+    }
+  };
+
+  // fetches and populates the global catalogue
+  const fetchGlobalCatalogue = async () => {
+    try {
+      const res = await fetch(`/api/global-catalogue`);
+
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (err) {
+        data = {};
+      }
+
+      if (!res.ok || !data || !Array.isArray(data.movies)) return;
+
+      const tempList = data.movies.map((movie, idx) => ({
+        // map to format
+        id: idx + 1,
+        title: movie.title,
+        description: movie.description,
+        poster: movie.coverImage || "",
+        rating: movie.ftsRating ? Number(movie.ftsRating) : 0,
+        releaseYear: movie.releaseYear || "",
+        imdbRating: "",
+      }));
+
+      // fill missing metadata from tmdb
+      const updated = await Promise.all(
+        tempList.map(async (m) => {
+          const updatedMovie = { ...m };
+          if (!m.releaseYear || !m.imdbRating) {
+            try {
+              const resDetails = await fetch(
+                `/api/tmdb-details?query=${encodeURIComponent(m.title)}`,
+              );
+
+              let details = {};
+              try {
+                details = await resDetails.json();
+              } catch (err) {
+                details = {};
+              }
+
+              // update only if missing
+              if (resDetails.ok && details && details.success) {
+                if (!m.releaseYear && details.releaseYear) {
+                  updatedMovie.releaseYear = details.releaseYear;
+                }
+                if (!m.imdbRating && details.imdbRating) {
+                  updatedMovie.imdbRating = details.imdbRating;
+                }
+                if (details.description && !updatedMovie.description) {
+                  updatedMovie.description = details.description;
+                }
+              }
+            } catch (err) {
+              // ignore
+            }
+          }
+          return updatedMovie;
+        }),
+      );
+      setGlobalMovies(updated);
+    } catch (err) {
+      console.error("Failed to fetch global catalogue", err);
+    }
+  };
+
+  // fetch and populate the users list for admin settings page
+  const fetchUsersList = async () => {
+    try {
+      const res = await fetch("/api/users");
+
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (err) {
+        data = {};
+      }
+
+      if (res.ok && data && data.success && Array.isArray(data.users)) {
+        // expanded with editable fields
+        const expanded = data.users.map((u) => ({
+          username: u.username,
+          accountType: u.accountType,
+          newUsername: u.username,
+          newPassword: "",
+          newAccountType: u.accountType,
+          newConfirmPassword: "",
+        }));
+        setSettingsUsers(expanded);
+      } else {
+        setSettingsUsers([]);
+      }
+    } catch (err) {
+      setSettingsUsers([]);
+    }
+  };
 
   // build DOM
   return React.createElement("div", { className: "app-container" }, [
