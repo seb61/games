@@ -382,6 +382,19 @@ function App({ initialLoggedIn = false }) {
           setShowLoginModal(false);
           // store logged in user for display
           setCurrentUser(loginUsername);
+          // store account type
+          setAccountType(data.accountType || "");
+          // session cookies 1 week
+          document.cookie =
+            "fts_user=" +
+            encodeURIComponent(loginUsername) +
+            "; path=/; max-age=" +
+            7 * 24 * 60 * 60; // 7 days in secs
+          document.cookie =
+            "fts_type=" +
+            encodeURIComponent(data.accountType || "") +
+            "; path=/; max-age=" +
+            7 * 24 * 60 * 60;
           // clear fields
           setLoginUsername("");
           setLoginPassword("");
