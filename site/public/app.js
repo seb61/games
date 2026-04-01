@@ -157,6 +157,77 @@ function App({ initialLoggedIn = false }) {
     return () => clearTimeout(handler);
   }, [newTitle]);
 
+  // fetch possible movies matching input
+  useEffect(() => {
+    // if input is empty, clear suggestions
+    if (!newTitle) {
+      setTitleSuggestions([]);
+      return;
+    }
+
+    const handler = setTimeout(() => {
+      fetch(
+        `/api/tmdb-suggestions?query=${encodeURIComponent(newTitle)}&limit=5`,
+      )
+        .then(async (res) => {
+          let data = {};
+
+          try {
+            data = await res.json();
+          } catch (err) {
+            data = {};
+          }
+
+          // only update if response is ok and data is valid
+          if (res.ok && data && data.success && Array.isArray(data.results)) {
+            setTitleSuggestions(data.results);
+          } else {
+            setTitleSuggestions([]);
+          }
+        })
+        .catch(() => {
+          setTitleSuggestions([]);
+        });
+    }, 800);
+    return () => clearTimeout(handler);
+  }, [newTitle]);
+
+  // fetch movie metadata
+  useEffect(() => {
+    // if title is empty, reset metadata fields and wait for input
+    if (!newTitle) {
+      setAutoReleaseYear("");
+      setAutoImdbRating("");
+      return;
+    }
+
+    const handler = setTimeout(() => {
+      fetch(`/api/tmdb-details?query=${encodeURIComponent(newTitle)}`)
+        .then(async (res) => {
+          let details = {};
+
+          try {
+            details = await res.json();
+          } catch (err) {
+            details = {};
+          }
+
+          if (res.ok && details && details.success) {
+            if (details.releaseYear) setAutoReleaseYear(details.releaseYear);
+            if (details.imdbRating) setAutoImdbRating(details.imdbRating);
+            // auto fill desc
+            if (details.description) {
+              setNewDesc(details.description);
+            }
+          }
+        })
+        .catch(() => {
+          // ignore for now
+        });
+    }, 800);
+    return () => clearTimeout(handler);
+  }, [newTitle]);
+
   // search posters for editing from TMDB
   useEffect(() => {
     if (!showEditModal || !editTitle) {
@@ -172,6 +243,59 @@ function App({ initialLoggedIn = false }) {
         setEditPosterOptions(options);
         setEditSelectedPoster(options[0] || "");
       });
+    }, 800);
+    return () => clearTimeout(handler);
+  }, [editTitle, showEditModal]);
+
+  // load settings when switching view
+  useEffect(() => {
+    if (view !== "settings" || !loggedIn) return;
+
+    if (accountType === "admin") {
+      // load users and info
+      fetchUsersList();
+      setSettingsUsername(currentUser);
+      setSettingsPassword("");
+      setSettingsConfirmPassword("");
+    } else {
+      // load current user info only
+      setSettingsUsername(currentUser);
+      setSettingsPassword("");
+      setSettingsConfirmPassword("");
+    }
+    // reset any previous error message
+    setSettingsError("");
+  }, [view, loggedIn, accountType]);
+
+  // fetch metadata for editing
+  useEffect(() => {
+    if (!showEditModal || !editTitle) {
+      setEditReleaseYear("");
+      setEditImdbRating("");
+      return;
+    }
+
+    const handler = setTimeout(() => {
+      fetch(`/api/tmdb-details?query=${encodeURIComponent(editTitle)}`)
+        .then(async (res) => {
+          let details = {};
+
+          try {
+            details = await res.json();
+          } catch (err) {
+            details = {};
+          }
+
+          // auto fill
+          if (res.ok && details && details.success) {
+            if (details.releaseYear) setEditReleaseYear(details.releaseYear);
+            if (details.imdbRating) setEditImdbRating(details.imdbRating);
+            if (details.description) setEditDesc(details.description);
+          }
+        })
+        .catch(() => {
+          // ignore
+        });
     }, 800);
     return () => clearTimeout(handler);
   }, [editTitle, showEditModal]);
