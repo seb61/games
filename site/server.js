@@ -2,11 +2,15 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
-const crypto = require("crypto");
 
-const PORT = process.env.PORT || 3000;
-// public dir
-const publicDir = path.join(__dirname, "public");
+const {
+  getUserCatalogPath,
+  readUserCatalogue,
+  writeUserCatalogue,
+  readGlobalCatalogue,
+  parseUsers,
+  hashPassword,
+} = require("./helpers");
 
 /**
  * Docs:
@@ -20,12 +24,338 @@ const publicDir = path.join(__dirname, "public");
  * - https://nodejs.org/api/crypto.html
  */
 
+
+const userCatalogDir = path.join(__dirname, "private", "catalogues");
+
 /**
- * Helper to parse the movies DB into an array.
- * @returns {Array} An array of movie objects with metadata
+ * GET /api/my-catalogue?username=...
+ * returns the logged in users personal movie catalogue
+ * @param {http.IncomingMessage} req
+ * @param {http.ServerResponse} res
+ */
+function handleApiMyCatalogue(req, res) {
+  const urlObj = new URL(req.url, `http://${req.headers.host}`);
+  const username = urlObj.searchParams.get("username");
+
+  if (!username) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        success: false,
+        message: "Username parameter required",
+      }),
+    );
+    return;
+  }
+
+  const movies = readUserCatalogue(username);
+  res.writeHead(200, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ success: true, movies: movies }));
+}
+
+/**
+ * GET /api/global-catalogue
+ * returns the combined catalogue from all users, with average ratings
+ * @param {http.ServerResponse} res
+ */
+function handleApiGlobalCatalogue(res) {
+  const list = readGlobalCatalogue();
+  res.writeHead(200, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ success: true, movies: list }));
+}
+
+/**
+ * POST /api/save-catalogue?username=...
+ * saves the provided movie list as the users personal catalogue
+ * @param {http.IncomingMessage} req
+ * @param {http.ServerResponse} res
+ */
+function handleApiSaveCatalogue(req, res) {
+  const urlObj = new URL(req.url, `http://${req.headers.host}`);
+  const username = urlObj.searchParams.get("username");
+
+  if (!username) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        success: false,
+        message: "Username parameter required",
+      }),
+    );
+    return;
+  }
+
+  // read body
+  let body = "";
+  req.on("data", (chunk) => {
+    body += chunk.toString();
+  });
+
+  req.on("end", () => {
+    let payload;
+
+    try {
+      payload = JSON.parse(body);
+    } catch (err) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: false, message: "Invalid JSON body" }));
+      return;
+    }
+
+    if (!payload || !Array.isArray(payload.movies)) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({ success: false, message: "Missing movies array" }),
+      );
+      return;
+    }
+
+    const ok = writeUserCatalogue(username, payload.movies);
+    if (!ok) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({ success: false, message: "Failed to save catalogue" }),
+      );
+      return;
+    }
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ success: true }));
+  });
+}
+
+/**
+ * DELETE /api/delete-movie?title=...
+ * deletes all entries of a movie with the given title from all user catalogues
+ * @param {http.IncomingMessage} req
+ * @param {http.ServerResponse} res
+ */
+function handleApiDeleteMovie(req, res) {
+  const urlObj = new URL(req.url, `http://${req.headers.host}`);
+  const titleParam = urlObj.searchParams.get("title");
+
+  if (!titleParam) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({ success: false, message: "Title parameter required" }),
+    );
+    return;
+  }
+
+  const key = titleParam.trim().toLowerCase();
+  let files;
+
+  try {
+    files = fs.readdirSync(userCatalogDir);
+  } catch (err) {
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({ success: false, message: "Failed to list catalogues" }),
+    );
+    return;
+  }
+
+  try {
+    for (const file of files) {
+      if (!file.endsWith(".csv")) continue;
+      const username = file.replace(/\.csv$/, ""); // get username from filename
+      const movies = readUserCatalogue(username);
+
+      // filter out entries with matching title
+      const filtered = movies.filter(
+        (m) => m.title.trim().toLowerCase() !== key,
+      );
+      if (filtered.length !== movies.length) {
+        writeUserCatalogue(username, filtered);
+      }
+    }
+  } catch (err) {
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({ success: false, message: "Failed to delete movie" }),
+    );
+    return;
+  }
+  res.writeHead(200, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ success: true }));
+}
+
+/**
+ * GET /api/users
+ * returns a list of all users with their account types *ADMIN*
+ * @param {http.ServerResponse} res
+ */
+function handleApiUsers(res) {
+  const users = parseUsers();
+
+  if (!users) {
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        success: false,
+        message: "Failed to load users database",
+      }),
+    );
+    return;
+  }
+
+  // strip password before returning
+  const list = users.map((u) => ({
+    username: u.username,
+    accountType: u.accountType,
+  }));
+  res.writeHead(200, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ success: true, users: list }));
+}
+
+/**
+ * POST /api/update-user
+ * updates a users information
+ * responses:
+ * - 400 for missing or invalid payload
+ * - 404 if the target user does not exist
+ * - 409 if the new username is already taken
+ * - 500 on read/write errors
+ * - 200 on success
+ * @param {http.IncomingMessage} req
+ * @param {http.ServerResponse} res
+ */
+function handleApiUpdateUser(req, res) {
+  let body = "";
+
+  // prevent abuse
+  req.on("data", (chunk) => {
+    body += chunk.toString();
+    if (body.length > 1e6) req.destroy();
+  });
+
+  req.on("end", () => {
+    let payload;
+
+    try {
+      payload = JSON.parse(body);
+    } catch (err) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: false, message: "Invalid JSON" }));
+      return;
+    }
+
+    const { targetUsername, newUsername, newPassword, newAccountType } =
+      payload || {};
+    if (!targetUsername) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          success: false,
+          message: "targetUsername is required",
+        }),
+      );
+      return;
+    }
+
+    // load users
+    const users = parseUsers();
+    if (!users) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          success: false,
+          message: "Failed to load users database",
+        }),
+      );
+      return;
+    }
+
+    // find index
+    const idx = users.findIndex((u) => u.username === targetUsername);
+    if (idx === -1) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: false, message: "User not found" }));
+      return;
+    }
+
+    // duplicate check if changing username
+    if (newUsername && newUsername !== targetUsername) {
+      const duplicate = users.some((u) => u.username === newUsername);
+      if (duplicate) {
+        res.writeHead(409, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            success: false,
+            message: "Username already exists",
+          }),
+        );
+        return;
+      }
+    }
+
+    // update user object
+    let updatedUsername = targetUsername;
+    if (newUsername && newUsername !== targetUsername) {
+      updatedUsername = newUsername;
+      users[idx].username = newUsername;
+      // rename catalogue file
+      try {
+        const oldPath = getUserCatalogPath(targetUsername);
+        const newPath = getUserCatalogPath(newUsername);
+        // if old file exists and new doesnt exist, rename
+        if (fs.existsSync(oldPath)) {
+          if (oldPath !== newPath) {
+            fs.renameSync(oldPath, newPath);
+          }
+        }
+      } catch (err) {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            success: false,
+            message: "Failed to rename catalogue",
+          }),
+        );
+        return;
+      }
+    }
+
+    // update password if provided
+    if (newPassword) {
+      users[idx].password = hashPassword(newPassword);
+    }
+    // update account type if provided
+    if (newAccountType) {
+      users[idx].accountType = newAccountType;
+    }
+    // write updated users file
+    const lines = [
+      "username,password,account-type",
+      ...users.map((u) => `${u.username},${u.password},${u.accountType}`),
+    ];
+    try {
+      const filePath = path.join(__dirname, "private/users.csv");
+      fs.writeFileSync(filePath, lines.join("\n"), "utf8");
+    } catch (err) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          success: false,
+          message: "Failed to update users database",
+        }),
+      );
+      return;
+    }
+    // success
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ success: true, username: updatedUsername }));
+  });
+}
+
+const PORT = process.env.PORT || 3000;
+// public dir
+const publicDir = path.join(__dirname, "public");
+
+/**
+ * helper to parse the movies DB into an array
+ * @returns {Array} an array of movie objects
  */
 function parseMovies() {
-  // try reading from private/movies.csv; if missing fall back to movies.csv
   let filePath = path.join(__dirname, "private/movies.csv");
   let data;
 
@@ -70,52 +400,6 @@ function parseMovies() {
     });
   }
   return movies;
-}
-
-/**
- * Helper to parse the users DB into an array.
- * @returns {Array} An array of user objects with metadata
- */
-function parseUsers() {
-  let filePath = path.join(__dirname, "private/users.csv");
-  let data;
-
-  // get the file
-  try {
-    data = fs.readFileSync(filePath, "utf8");
-  } catch (err) {
-    // fallback
-    try {
-      filePath = path.join(__dirname, "users.csv");
-      data = fs.readFileSync(filePath, "utf8");
-    } catch (err2) {
-      console.error("Failed to read users.csv:", err2);
-      return null; // for api
-    }
-  }
-
-  // remove header
-  const lines = data.trim().split(/\r?\n/);
-  lines.shift();
-  const users = [];
-  for (const line of lines) {
-    const [username, password, accountType] = line.split(",");
-    users.push({
-      username: username.trim(),
-      password: password.trim(),
-      accountType: accountType.trim(),
-    });
-  }
-  return users;
-}
-
-/**
- * hashes a password using sha-256
- * @param {string} password plain text password
- * @returns {string} sha-256 hash of the password
- */
-function hashPassword(password) {
-  return crypto.createHash("sha256").update(password).digest("hex");
 }
 
 // GET /api/movies
@@ -207,6 +491,235 @@ function handleApiTmdbSearch(req, res) {
         JSON.stringify({
           success: false,
           message: "Error communicating with TMDb",
+        }),
+      );
+    });
+}
+
+/**
+ * GET /api/tmdb-details?query=...
+ * returns basic metadata for the movie matching the query
+ * @param {http.IncomingMessage} req
+ * @param {http.ServerResponse} res
+ */
+function handleApiTmdbDetails(req, res) {
+  // parse
+  const urlObj = new URL(req.url, `http://${req.headers.host}`);
+  const queryParam = urlObj.searchParams.get("query");
+
+  if (!queryParam) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        success: false,
+        message: "Query parameter required",
+      }),
+    );
+    return;
+  }
+
+  // ensure API key exists
+  const apiKey = process.env.TMDB_API_KEY || "8e8e6903634e4456e06bdd740af13ca6";
+  if (!apiKey) {
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        success: false,
+        message: "TMDB API key not configured",
+      }),
+    );
+    return;
+  }
+
+  // call TMDB search API
+  const tmdbUrl = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(
+    queryParam,
+  )}`;
+  https
+    .get(tmdbUrl, (apiRes) => {
+      let data = "";
+      apiRes.on("data", (chunk) => {
+        data += chunk.toString();
+      });
+
+      apiRes.on("end", () => {
+        try {
+          const json = JSON.parse(data);
+          const results = Array.isArray(json.results) ? json.results : [];
+
+          if (results.length === 0) {
+            // no matches found
+            res.writeHead(404, { "Content-Type": "application/json" });
+            res.end(
+              JSON.stringify({
+                success: false,
+                message: "No matching movie found",
+              }),
+            );
+            return;
+          }
+
+          // pick the first result
+          const first = results[0];
+          let releaseYear = "";
+          if (first.release_date) {
+            // extract year
+            const year = first.release_date.split("-")[0];
+            releaseYear = year;
+          }
+
+          // vote_average
+          const imdbRating =
+            typeof first.vote_average === "number"
+              ? String(first.vote_average)
+              : "";
+
+          // movie description
+          const description =
+            typeof first.overview === "string" && first.overview.trim().length
+              ? first.overview.trim()
+              : "";
+
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(
+            JSON.stringify({
+              success: true,
+              releaseYear: releaseYear,
+              imdbRating: imdbRating,
+              description: description,
+            }),
+          );
+        } catch (err) {
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(
+            JSON.stringify({
+              success: false,
+              message: "Failed to parse TMDB response",
+            }),
+          );
+        }
+      });
+    })
+    .on("error", (err) => {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          success: false,
+          message: "Failed to fetch data from TMDB",
+        }),
+      );
+    });
+}
+
+/**
+ * GET /api/tmdb-suggestions?query=...&limit=...
+ * returns an array of movie suggestions matching the query
+ * @param {http.IncomingMessage} req
+ * @param {http.ServerResponse} res
+ */
+function handleApiTmdbSuggestions(req, res) {
+  // parse
+  const urlObj = new URL(req.url, `http://${req.headers.host}`);
+  const queryParam = urlObj.searchParams.get("query");
+  const limitParam = parseInt(urlObj.searchParams.get("limit"), 10);
+  const limit = isNaN(limitParam) ? 5 : Math.max(1, limitParam);
+
+  // require a search query
+  if (!queryParam) {
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({ success: false, message: "Query parameter required" }),
+    );
+    return;
+  }
+  // ensure API key exists
+  const apiKey = process.env.TMDB_API_KEY || "8e8e6903634e4456e06bdd740af13ca6";
+  if (!apiKey) {
+    res.writeHead(500, { "Content-Type": "application/json" });
+    res.end(
+      JSON.stringify({
+        success: false,
+        message: "TMDB API key not configured",
+      }),
+    );
+    return;
+  }
+  // call TMDB search API
+  const tmdbUrl = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(
+    queryParam,
+  )}`;
+  https
+    .get(tmdbUrl, (apiRes) => {
+      let data = "";
+      apiRes.on("data", (chunk) => {
+        data += chunk.toString();
+      });
+
+      apiRes.on("end", () => {
+        try {
+          const json = JSON.parse(data);
+          const results = Array.isArray(json.results) ? json.results : []; // check if results is array
+
+          if (results.length === 0) {
+            res.writeHead(404, { "Content-Type": "application/json" });
+            res.end(
+              JSON.stringify({
+                success: false,
+                message: "No matching movie found",
+              }),
+            );
+            return;
+          }
+
+          // build suggestions array
+          const suggestions = results.slice(0, limit).map((item) => {
+            // extract year
+            let releaseYear = "";
+            if (item.release_date) {
+              releaseYear = item.release_date.split("-")[0];
+            }
+
+            const imdbRating =
+              typeof item.vote_average === "number"
+                ? String(item.vote_average)
+                : "";
+
+            const description =
+              typeof item.overview === "string" && item.overview.trim().length
+                ? item.overview.trim()
+                : "";
+
+            const poster = item.poster_path
+              ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+              : "";
+
+            return {
+              title: item.title || item.original_title || "",
+              releaseYear,
+              imdbRating,
+              description,
+              poster,
+            };
+          });
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ success: true, results: suggestions }));
+        } catch (err) {
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(
+            JSON.stringify({
+              success: false,
+              message: "Failed to parse TMDB response",
+            }),
+          );
+        }
+      });
+    })
+    .on("error", (err) => {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          success: false,
+          message: "Failed to fetch TMDB data",
         }),
       );
     });
@@ -358,7 +871,7 @@ function handleApiRegister(req, res) {
     // save to db
     const hashed = hashPassword(password);
     let filePath = path.join(__dirname, "private/users.csv");
-    
+
     const line = `\n${username},${hashed},user`;
 
     // if fail, return 500
@@ -378,7 +891,7 @@ function handleApiRegister(req, res) {
   });
 }
 
-// Serves static files from the public dir
+// serves static files
 function serveStatic(req, res) {
   let reqPath = req.url.split("?")[0];
   // prevent searching through dirs
@@ -432,6 +945,38 @@ const server = http.createServer((req, res) => {
   }
   if (req.url.startsWith("/api/tmdb-search") && req.method === "GET") {
     handleApiTmdbSearch(req, res);
+    return;
+  }
+  if (req.url.startsWith("/api/tmdb-suggestions") && req.method === "GET") {
+    handleApiTmdbSuggestions(req, res);
+    return;
+  }
+  if (req.url.startsWith("/api/tmdb-details") && req.method === "GET") {
+    handleApiTmdbDetails(req, res);
+    return;
+  }
+  if (req.url.startsWith("/api/my-catalogue") && req.method === "GET") {
+    handleApiMyCatalogue(req, res);
+    return;
+  }
+  if (req.url.startsWith("/api/global-catalogue") && req.method === "GET") {
+    handleApiGlobalCatalogue(res);
+    return;
+  }
+  if (req.url.startsWith("/api/save-catalogue") && req.method === "POST") {
+    handleApiSaveCatalogue(req, res);
+    return;
+  }
+  if (req.url.startsWith("/api/delete-movie") && req.method === "DELETE") {
+    handleApiDeleteMovie(req, res);
+    return;
+  }
+  if (req.url === "/api/users" && req.method === "GET") {
+    handleApiUsers(res);
+    return;
+  }
+  if (req.url === "/api/update-user" && req.method === "POST") {
+    handleApiUpdateUser(req, res);
     return;
   }
   serveStatic(req, res);
