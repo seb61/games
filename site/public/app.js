@@ -449,14 +449,19 @@ function App({ initialLoggedIn = false }) {
 
   // update rating by id
   const handleRate = (id, value) => {
-    setMovies((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, rating: value } : m)),
+    // update personal catalogue rating
+    const updatedList = myMovies.map((m) =>
+      m.id === id ? { ...m, rating: value } : m,
     );
+    setMyMovies(updatedList);
+    // save to db
+    saveMyCatalogue(updatedList);
   };
 
   // open edit modal with selected movie
   const handleEditClick = (id) => {
-    const movie = movies.find((m) => m.id === id); // find by id
+    // find movie in personal catalogue
+    const movie = myMovies.find((m) => m.id === id);
     if (!movie) return;
 
     setEditMovieId(id);
@@ -465,6 +470,9 @@ function App({ initialLoggedIn = false }) {
     // init with current poster if exist
     setEditSelectedPoster(movie.poster || "");
     setEditPosterOptions(movie.poster ? [movie.poster] : []);
+    // load existing metadata into edit state
+    setEditReleaseYear(movie.releaseYear || "");
+    setEditImdbRating(movie.imdbRating || "");
     setShowEditModal(true);
   };
 
