@@ -71,11 +71,20 @@ function App({ initialLoggedIn = false }) {
   const [posterSearchContext, setPosterSearchContext] = useState("");
 
   // fetch movies on login
+  // cookie check
   useEffect(() => {
     if (!loggedIn) return; // if state isnt true
     fetch("/api/movies")
       .then(async (res) => {
         let data = [];
+    // parse cookies into a map
+    const cookieMap = {};
+    // get key pairs
+    document.cookie.split(";").forEach((c) => {
+      const [name, ...rest] = c.trim().split("=");
+      if (!name) return;
+      cookieMap[name] = decodeURIComponent(rest.join("="));
+    });
 
         // parse
         try {
