@@ -318,6 +318,40 @@ function App({ initialLoggedIn = false }) {
     return () => clearTimeout(handler);
   }, [posterSearchInput, showPosterSearchModal]);
 
+  // fetch title suggestions for editing
+  useEffect(() => {
+    if (!showEditModal || !editTitle) {
+      setEditTitleSuggestions([]);
+      return;
+    }
+
+    const handler = setTimeout(() => {
+      fetch(
+        `/api/tmdb-suggestions?query=${encodeURIComponent(editTitle)}&limit=5`,
+      )
+        .then(async (res) => {
+          let data = {};
+
+          try {
+            data = await res.json();
+          } catch (err) {
+            data = {};
+          }
+
+          // update
+          if (res.ok && data && data.success && Array.isArray(data.results)) {
+            setEditTitleSuggestions(data.results);
+          } else {
+            setEditTitleSuggestions([]);
+          }
+        })
+        .catch(() => {
+          setEditTitleSuggestions([]); // on error, clear suggestions
+        });
+    }, 800);
+    return () => clearTimeout(handler);
+  }, [editTitle, showEditModal]);
+
   // handle login form
   const handleLogin = (e) => {
     e.preventDefault();
