@@ -1271,7 +1271,7 @@ function App({ initialLoggedIn = false }) {
                           type: "password",
                           value: settingsPassword,
                           onChange: (e) => setSettingsPassword(e.target.value),
-                          placeholder: "Leave blank to keep current password",
+                          placeholder: "Enter new password",
                         }),
                       ]),
                       React.createElement("label", { key: "cpLabel" }, [
@@ -1344,7 +1344,7 @@ function App({ initialLoggedIn = false }) {
                               onChange: (e) =>
                                 setSettingsPassword(e.target.value),
                               placeholder:
-                                "Leave blank to keep current password",
+                                "Enter new password",
                             }),
                           ]),
                           React.createElement("label", { key: "cpLabel" }, [
@@ -1483,7 +1483,7 @@ function App({ initialLoggedIn = false }) {
                                             e.target.value,
                                           ),
                                         placeholder:
-                                          "Leave blank to keep password",
+                                          "Enter new password",
                                       }),
                                     ),
                                     // confirm password field

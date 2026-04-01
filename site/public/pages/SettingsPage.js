@@ -49,7 +49,7 @@ function SettingsPage({
           type: "password",
           value: settingsPassword,
           onChange: (e) => onPasswordChange && onPasswordChange(e.target.value),
-          placeholder: "Leave blank to keep current password",
+          placeholder: "Enter new password",
         }),
       ]),
       React.createElement("label", { key: "cpLabel" }, [
@@ -153,7 +153,7 @@ function SettingsPage({
                     onChange: (e) =>
                       updateUserField &&
                       updateUserField(idx, "newPassword", e.target.value),
-                    placeholder: "Leave blank to keep password",
+                    placeholder: "Enter new password",
                   }),
                 ),
                 React.createElement(
