@@ -415,6 +415,7 @@ function App({ initialLoggedIn = false }) {
   };
 
   // handle adding a movie (locally)
+  // handle adding a movie
   const handleAddMovie = (e) => {
     e.preventDefault();
     const title = newTitle.trim();
@@ -427,6 +428,8 @@ function App({ initialLoggedIn = false }) {
       description: desc,
       poster: selectedPoster || "",
       rating: 0,
+      releaseYear: autoReleaseYear || "",
+      imdbRating: autoImdbRating || "",
     };
 
     setMovies((prev) => [...prev, newMovie]);
