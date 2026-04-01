@@ -96,37 +96,25 @@ function App({ initialLoggedIn = false }) {
     }
   }, []);
 
-        if (!res.ok) {
-          // if error
-          const message =
-            data && data.message ? data.message : "Failed to fetch movies";
-          console.error(message);
-          return [];
-        }
-        return data;
-      })
-      .then((data) => {
-        if (!Array.isArray(data)) return; // if not array, return
-        // maps to MovieCard format
-        const transformed = data.map((movie, index) => {
-          return {
-            id: index + 1,
-            title: movie.title,
-            description: movie.description,
-            poster: movie.coverImage || "",
-            // metadata
-            rating: Number(movie.rating) || 0,
-            releaseYear: movie["release-year"] || "",
-            imdbRating: movie.rating || "",
-          };
-        });
-        setMovies(transformed);
-        setNextId(transformed.length + 1);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch movies:", err);
-      });
-  }, [loggedIn]);
+  // switch between global and personal catalogues
+  useEffect(() => {
+    if (view === "global") {
+      setMovies(globalMovies);
+    } else {
+      setMovies(myMovies);
+    }
+  }, [view, globalMovies, myMovies]); // update
+
+  // init data fetch on login
+  useEffect(() => {
+    if (!loggedIn || !currentUser) return;
+    // fetch personal catalogue
+    fetchMyCatalogue();
+    // fetch global catalogue
+    fetchGlobalCatalogue();
+    // show global catalogue by default
+    setView("global");
+  }, [loggedIn, currentUser]);
 
   // search posters from TMDB
   useEffect(() => {
