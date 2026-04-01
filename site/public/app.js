@@ -1042,7 +1042,7 @@ function App({ initialLoggedIn = false }) {
       React.createElement(
         "h1",
         { key: "site", className: "site-name" },
-        "FTS Movie Catalogue",
+        "FTS: MC", // title header
       ),
       React.createElement("div", { key: "actions", className: "actions" }, [
         React.createElement("input", {
@@ -1060,10 +1060,16 @@ function App({ initialLoggedIn = false }) {
               "button",
               {
                 key: "homeBtn",
-                className: "nav-icon-button home-btn",
-                title: "Home catalogue",
-                "aria-label": "Home catalogue",
-                onClick: () => {},
+                className:
+                  "nav-icon-button home-btn" +
+                  (view === "global" ? " active" : ""),
+                title: "All Movies",
+                "aria-label": "Global catalogue",
+                onClick: () => {
+                  // switch to global view
+                  setView("global");
+                  fetchGlobalCatalogue();
+                },
               },
               React.createElement(
                 "svg",
@@ -1092,10 +1098,16 @@ function App({ initialLoggedIn = false }) {
               "button",
               {
                 key: "myCatBtn",
-                className: "nav-icon-button my-cat-btn",
-                title: "My catalogue",
+                className:
+                  "nav-icon-button my-cat-btn" +
+                  (view === "my" ? " active" : ""),
+                title: "My Catalogue",
                 "aria-label": "My catalogue",
-                onClick: () => {},
+                onClick: () => {
+                  // switch to personal view
+                  setView("my");
+                  fetchMyCatalogue();
+                },
               },
               React.createElement(
                 "svg",
@@ -1116,6 +1128,24 @@ function App({ initialLoggedIn = false }) {
                   }),
                 ],
               ),
+            )
+          : null,
+
+        // current page label
+        loggedIn
+          ? React.createElement(
+              "span",
+              {
+                key: "pageLabel",
+                className: "nav-label",
+              },
+              view === "global"
+                ? "All"
+                : view === "my"
+                  ? "My Catalogue"
+                  : view === "settings"
+                    ? "Settings"
+                    : "",
             )
           : null,
 
@@ -1167,17 +1197,7 @@ function App({ initialLoggedIn = false }) {
                   "div",
                   { key: "menu", className: "user-dropdown" },
                   [
-                    React.createElement(
-                      "div",
-                      {
-                        key: "dash",
-                        className: "user-dropdown-item",
-                        onClick: () => {
-                          setShowUserMenu(false);
-                        },
-                      },
-                      "Account Dashboard",
-                    ),
+                    // settings option
                     React.createElement(
                       "div",
                       {
@@ -1185,6 +1205,8 @@ function App({ initialLoggedIn = false }) {
                         className: "user-dropdown-item",
                         onClick: () => {
                           setShowUserMenu(false);
+                          // switch to settings view
+                          setView("settings");
                         },
                       },
                       "Settings",
