@@ -478,22 +478,26 @@ function App({ initialLoggedIn = false }) {
 
   // save edits
   const handleSaveEdit = (e) => {
-    e.preventDefault();
+    e.preventDefault(); // prevent submission
     const title = editTitle.trim();
     const desc = editDesc.trim();
     if (!title || !desc) return;
-    setMovies((prev) =>
-      prev.map((m) =>
-        m.id === editMovieId
-          ? {
-              ...m,
-              title: title,
-              description: desc,
-              poster: editSelectedPoster || m.poster,
-            }
-          : m,
-      ),
-    );
+
+    // update the movie in the personal catalogue
+    const updatedList = myMovies.map((m) => {
+      if (m.id !== editMovieId) return m;
+      return {
+        ...m,
+        title: title,
+        description: desc,
+        poster: editSelectedPoster || m.poster,
+        releaseYear: editReleaseYear || m.releaseYear,
+        imdbRating: editImdbRating || m.imdbRating,
+      };
+    });
+    setMyMovies(updatedList);
+    // save to db
+    saveMyCatalogue(updatedList);
     // reset states
     setShowEditModal(false);
     setEditMovieId(null);
@@ -501,6 +505,8 @@ function App({ initialLoggedIn = false }) {
     setEditDesc("");
     setEditPosterOptions([]);
     setEditSelectedPoster("");
+    setEditTitleSuggestions([]);
+  };
   };
 
   // register a new account
