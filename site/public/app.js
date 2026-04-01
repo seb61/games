@@ -60,6 +60,8 @@ function App({ initialLoggedIn = false }) {
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerConfirm, setRegisterConfirm] = useState("");
   const [registerError, setRegisterError] = useState("");
+  // admin or user
+  const [accountType, setAccountType] = useState("");
   // account dropdown
   const [showUserMenu, setShowUserMenu] = useState(false);
   // seach query state
@@ -69,6 +71,26 @@ function App({ initialLoggedIn = false }) {
   const [posterSearchInput, setPosterSearchInput] = useState("");
   const [posterSearchResults, setPosterSearchResults] = useState([]);
   const [posterSearchContext, setPosterSearchContext] = useState("");
+  // metadata states
+  const [autoReleaseYear, setAutoReleaseYear] = useState("");
+  const [autoImdbRating, setAutoImdbRating] = useState("");
+  const [editReleaseYear, setEditReleaseYear] = useState(""); // if editing
+  const [editImdbRating, setEditImdbRating] = useState("");
+  // moviecard suggestions states
+  const [titleSuggestions, setTitleSuggestions] = useState([]);
+  const [editTitleSuggestions, setEditTitleSuggestions] = useState([]);
+  // admin settings states
+  const [settingsUsers, setSettingsUsers] = useState([]);
+  // settings form states
+  const [settingsUsername, setSettingsUsername] = useState("");
+  const [settingsPassword, setSettingsPassword] = useState("");
+  const [settingsConfirmPassword, setSettingsConfirmPassword] = useState("");
+  const [settingsError, setSettingsError] = useState("");
+  // currently displayed page
+  const [view, setView] = useState("global");
+  // personal and global catalogues
+  const [myMovies, setMyMovies] = useState([]);
+  const [globalMovies, setGlobalMovies] = useState([]);
 
   // cookie check
   useEffect(() => {
