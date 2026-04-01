@@ -1230,32 +1230,320 @@ function App({ initialLoggedIn = false }) {
         ),
       ]),
     ]),
-    // movie grid when logged in
+    // main content
     loggedIn
-      ? React.createElement("main", { key: "main", className: "movies-grid" }, [
-          // for each movie, render a card
-          ...filteredMovies.map((movie) =>
-            React.createElement(MovieCard, {
-              key: movie.id,
-              movie: movie,
-              onRate: handleRate,
-              onEdit: handleEditClick,
-            }),
-          ),
+      ? // settings page
+        view === "settings"
+        ? React.createElement(
+            "main",
+            { key: "settingsMain", className: "settings-page" },
+            [
+              // user settings
+              accountType !== "admin"
+                ? React.createElement(
+                    window.SettingsCard,
+                    { key: "userSettingsCard", title: "Account Settings" },
+                    [
+                      settingsError
+                        ? React.createElement(
+                            "div",
+                            { key: "err", className: "settings-error" },
+                            settingsError,
+                          )
+                        : null,
+                      React.createElement("label", { key: "uLabel" }, [
+                        React.createElement("span", { key: "s" }, "Username"),
+                        React.createElement("input", {
+                          key: "uInput",
+                          type: "text",
+                          value: settingsUsername,
+                          onChange: (e) => setSettingsUsername(e.target.value),
+                        }),
+                      ]),
+                      React.createElement("label", { key: "pLabel" }, [
+                        React.createElement(
+                          "span",
+                          { key: "s" },
+                          "New Password",
+                        ),
+                        React.createElement("input", {
+                          key: "pInput",
+                          type: "password",
+                          value: settingsPassword,
+                          onChange: (e) => setSettingsPassword(e.target.value),
+                          placeholder: "Leave blank to keep current password",
+                        }),
+                      ]),
+                      React.createElement("label", { key: "cpLabel" }, [
+                        React.createElement(
+                          "span",
+                          { key: "s" },
+                          "Confirm Password",
+                        ),
+                        React.createElement("input", {
+                          key: "cpInput",
+                          type: "password",
+                          value: settingsConfirmPassword,
+                          onChange: (e) =>
+                            setSettingsConfirmPassword(e.target.value),
+                          placeholder: "Re-enter new password",
+                        }),
+                      ]),
+                      React.createElement(
+                        "button",
+                        {
+                          key: "saveUser",
+                          className: "btn btn-confirm",
+                          onClick: () => saveCurrentUserSettings(),
+                        },
+                        "Save",
+                      ),
+                    ],
+                  )
+                : // admin settings
+                  React.createElement(
+                    React.Fragment,
+                    { key: "adminSettings" },
+                    [
+                      // personal account settings
+                      React.createElement(
+                        window.SettingsCard,
+                        { key: "adminAccountCard", title: "Account Settings" },
+                        [
+                          settingsError && !Array.isArray(settingsError)
+                            ? React.createElement(
+                                "div",
+                                { key: "err", className: "settings-error" },
+                                settingsError,
+                              )
+                            : null,
+                          React.createElement("label", { key: "uLabel" }, [
+                            React.createElement(
+                              "span",
+                              { key: "s" },
+                              "Username",
+                            ),
+                            React.createElement("input", {
+                              key: "uInput",
+                              type: "text",
+                              value: settingsUsername,
+                              onChange: (e) =>
+                                setSettingsUsername(e.target.value),
+                            }),
+                          ]),
+                          React.createElement("label", { key: "pLabel" }, [
+                            React.createElement(
+                              "span",
+                              { key: "s" },
+                              "New Password",
+                            ),
+                            React.createElement("input", {
+                              key: "pInput",
+                              type: "password",
+                              value: settingsPassword,
+                              onChange: (e) =>
+                                setSettingsPassword(e.target.value),
+                              placeholder:
+                                "Leave blank to keep current password",
+                            }),
+                          ]),
+                          React.createElement("label", { key: "cpLabel" }, [
+                            React.createElement(
+                              "span",
+                              { key: "s" },
+                              "Confirm Password",
+                            ),
+                            React.createElement("input", {
+                              key: "cpInput",
+                              type: "password",
+                              value: settingsConfirmPassword,
+                              onChange: (e) =>
+                                setSettingsConfirmPassword(e.target.value),
+                              placeholder: "Re-enter new password",
+                            }),
+                          ]),
+                          React.createElement(
+                            "button",
+                            {
+                              key: "saveAdminSelf",
+                              className: "btn btn-confirm",
+                              onClick: () => saveCurrentUserSettings(),
+                            },
+                            "Save",
+                          ),
+                        ],
+                      ),
+                      // user management settings
+                      React.createElement(
+                        window.SettingsCard,
+                        { key: "userManagementCard", title: "User Management" },
+                        [
+                          settingsError && Array.isArray(settingsError)
+                            ? React.createElement(
+                                "div",
+                                { key: "err", className: "settings-error" },
+                                settingsError,
+                              )
+                            : null,
+                          React.createElement(
+                            "table",
+                            { key: "table", className: "settings-table" },
+                            [
+                              React.createElement(
+                                "thead",
+                                { key: "thead" },
+                                React.createElement("tr", { key: "tr" }, [
+                                  React.createElement(
+                                    "th",
+                                    { key: "u" },
+                                    "Username",
+                                  ),
+                                  React.createElement(
+                                    "th",
+                                    { key: "r" },
+                                    "Role",
+                                  ),
+                                  React.createElement(
+                                    "th",
+                                    { key: "p" },
+                                    "New Password",
+                                  ),
+                                  React.createElement(
+                                    "th",
+                                    { key: "cp" },
+                                    "Confirm Password",
+                                  ),
+                                  React.createElement(
+                                    "th",
+                                    { key: "a" },
+                                    "Action",
+                                  ),
+                                ]),
+                              ),
+                              React.createElement(
+                                "tbody",
+                                { key: "tbody" },
+                                settingsUsers.map((u, idx) =>
+                                  React.createElement("tr", { key: idx }, [
+                                    // username field
+                                    React.createElement(
+                                      "td",
+                                      { key: "u" },
+                                      React.createElement("input", {
+                                        type: "text",
+                                        value: u.newUsername,
+                                        onChange: (e) =>
+                                          updateSettingsUserField(
+                                            idx,
+                                            "newUsername",
+                                            e.target.value,
+                                          ),
+                                      }),
+                                    ),
+                                    // role select
+                                    React.createElement(
+                                      "td",
+                                      { key: "r" },
+                                      React.createElement(
+                                        "select",
+                                        {
+                                          value: u.newAccountType,
+                                          onChange: (e) =>
+                                            updateSettingsUserField(
+                                              idx,
+                                              "newAccountType",
+                                              e.target.value,
+                                            ),
+                                        },
+                                        [
+                                          React.createElement(
+                                            "option",
+                                            { key: "user", value: "user" },
+                                            "user",
+                                          ),
+                                          React.createElement(
+                                            "option",
+                                            { key: "admin", value: "admin" },
+                                            "admin",
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    // new password field
+                                    React.createElement(
+                                      "td",
+                                      { key: "p" },
+                                      React.createElement("input", {
+                                        type: "password",
+                                        value: u.newPassword,
+                                        onChange: (e) =>
+                                          updateSettingsUserField(
+                                            idx,
+                                            "newPassword",
+                                            e.target.value,
+                                          ),
+                                        placeholder:
+                                          "Leave blank to keep password",
+                                      }),
+                                    ),
+                                    // confirm password field
+                                    React.createElement(
+                                      "td",
+                                      { key: "cp" },
+                                      React.createElement("input", {
+                                        type: "password",
+                                        value: u.newConfirmPassword,
+                                        onChange: (e) =>
+                                          updateSettingsUserField(
+                                            idx,
+                                            "newConfirmPassword",
+                                            e.target.value,
+                                          ),
+                                        placeholder: "Re-enter new password",
+                                      }),
+                                    ),
+                                    // action
+                                    React.createElement(
+                                      "td",
+                                      { key: "a" },
+                                      React.createElement(
+                                        "button",
+                                        {
+                                          className: "btn btn-confirm",
+                                          onClick: () => saveSettingsUser(idx),
+                                        },
+                                        "Save",
+                                      ),
+                                    ),
+                                  ]),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+            ],
+          )
+        : // movies grid
           React.createElement(
-            "div",
-            { key: "addCard", className: "movie-card add-card" },
-            React.createElement(
-              "button",
-              {
-                className: "add-card-button",
-                onClick: () => setShowAddModal(true),
-                disabled: !loggedIn,
+            "main",
+            { key: "catalogueMain" },
+            React.createElement(window.CataloguePage, {
+              movies: filteredMovies,
+              view: view,
+              accountType: accountType,
+              onRate: (id, value) => handleRate(id, value),
+              onEdit: handleEditClick,
+              onDelete: (title) => {
+                if (accountType === "admin" && title) {
+                  deleteMovie(title);
+                }
               },
-              "+ Add Movie",
-            ),
-          ),
-        ])
+              onAdd: () => setShowAddModal(true),
+            }),
+          )
       : null,
     // add movie overlay
     showAddModal
