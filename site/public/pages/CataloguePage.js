@@ -51,11 +51,7 @@ function CataloguePage({
       ),
     );
   }
-  return React.createElement(
-    "div",
-    { className: "movies-grid" },
-    cards,
-  );
+  return React.createElement("div", { className: "movies-grid" }, cards);
 }
 
 // global
