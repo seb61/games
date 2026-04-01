@@ -1708,13 +1708,35 @@ function App({ initialLoggedIn = false }) {
                     placeholder: "Enter title",
                   }),
                 ]),
+                // movie suggestions list for edit form
+                editTitleSuggestions && editTitleSuggestions.length > 0
+                  ? React.createElement(
+                      "ul",
+                      {
+                        key: "editTitleSuggestions",
+                        className: "title-suggestions",
+                      },
+                      editTitleSuggestions.map((s, idx) =>
+                        React.createElement(
+                          "li",
+                          {
+                            key: idx,
+                            onClick: () => handleEditTitleSuggestionClick(s),
+                          },
+                          s.title +
+                            (s.releaseYear ? ` (${s.releaseYear})` : ""),
+                        ),
+                      ),
+                    )
+                  : null,
                 React.createElement("label", { key: "descLabel" }, [
                   React.createElement("span", { key: "s" }, "Description"),
                   React.createElement("textarea", {
                     key: "desc",
                     value: editDesc,
-                    onChange: (e) => setEditDesc(e.target.value),
-                    placeholder: "Enter a short description",
+                    // read only
+                    disabled: true,
+                    placeholder: "Description will be auto‑filled",
                   }),
                 ]),
                 editPosterOptions.length > 0
@@ -1773,6 +1795,31 @@ function App({ initialLoggedIn = false }) {
                     React.createElement(
                       "button",
                       {
+                        key: "delete",
+                        type: "button",
+                        className: "btn btn-delete",
+                        onClick: () => {
+                          if (view === "my") {
+                            deleteMyMovie(editMovieId);
+                          } else if (accountType === "admin") {
+                            deleteMovie(editTitle);
+                          }
+                          setShowEditModal(false);
+                          setEditMovieId(null);
+                          setEditTitle("");
+                          setEditDesc("");
+                          setEditPosterOptions([]);
+                          setEditSelectedPoster("");
+                          setEditReleaseYear("");
+                          setEditImdbRating("");
+                          setEditTitleSuggestions([]);
+                        },
+                      },
+                      "Delete",
+                    ),
+                    React.createElement(
+                      "button",
+                      {
                         key: "cancel",
                         type: "button",
                         className: "btn btn-cancel",
@@ -1783,6 +1830,9 @@ function App({ initialLoggedIn = false }) {
                           setEditDesc("");
                           setEditPosterOptions([]);
                           setEditSelectedPoster("");
+                          setEditReleaseYear("");
+                          setEditImdbRating("");
+                          setEditTitleSuggestions([]);
                         },
                       },
                       "Cancel",
@@ -1842,7 +1892,7 @@ function App({ initialLoggedIn = false }) {
                       loginError,
                     )
                   : null,
-                // actions for submit/cancel
+                // submit/cancel
                 React.createElement(
                   "div",
                   { key: "actions", className: "model-actions" },
