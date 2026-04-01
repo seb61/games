@@ -414,7 +414,6 @@ function App({ initialLoggedIn = false }) {
       });
   };
 
-  // handle adding a movie (locally)
   // handle adding a movie
   const handleAddMovie = (e) => {
     e.preventDefault();
@@ -432,12 +431,19 @@ function App({ initialLoggedIn = false }) {
       imdbRating: autoImdbRating || "",
     };
 
-    setMovies((prev) => [...prev, newMovie]);
-    setNextId((id) => id + 1);
+    const updatedList = [...myMovies, newMovie]; // update  movie list
+    setMyMovies(updatedList);
+    setNextId((id) => id + 1); // next movie
+    // save to db
+    saveMyCatalogue(updatedList);
+    // reset form fields
     setNewTitle("");
     setNewDesc("");
     setSelectedPoster("");
     setPosterOptions([]);
+    setAutoReleaseYear("");
+    setAutoImdbRating("");
+    setTitleSuggestions([]);
     setShowAddModal(false);
   };
 
