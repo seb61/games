@@ -1570,16 +1570,38 @@ function App({ initialLoggedIn = false }) {
                     placeholder: "Enter title",
                   }),
                 ]),
+                // movie suggestions list
+                titleSuggestions && titleSuggestions.length > 0
+                  ? React.createElement(
+                      "ul",
+                      {
+                        key: "titleSuggestions",
+                        className: "title-suggestions",
+                      },
+                      titleSuggestions.map((s, idx) =>
+                        React.createElement(
+                          "li",
+                          {
+                            key: idx,
+                            onClick: () => handleTitleSuggestionClick(s),
+                          },
+                          s.title +
+                            (s.releaseYear ? ` (${s.releaseYear})` : ""),
+                        ),
+                      ),
+                    )
+                  : null,
                 React.createElement("label", { key: "descLabel" }, [
                   React.createElement("span", { key: "s" }, "Description"),
                   React.createElement("textarea", {
                     key: "desc",
                     value: newDesc,
-                    onChange: (e) => setNewDesc(e.target.value),
-                    placeholder: "Enter a short description",
+                    // read only
+                    disabled: true,
+                    placeholder: "Description will be auto-filled",
                   }),
                 ]),
-                // show TMDB poster slider
+                // poster options slider
                 posterOptions.length > 0
                   ? React.createElement("div", { key: "posterSection" }, [
                       React.createElement(
@@ -1641,9 +1663,15 @@ function App({ initialLoggedIn = false }) {
                         className: "btn btn-cancel",
                         onClick: () => {
                           setShowAddModal(false);
-                          // reset poster state when canceling
+                          // reset poster and metadata
                           setPosterOptions([]);
                           setSelectedPoster("");
+                          setAutoReleaseYear("");
+                          setAutoImdbRating("");
+                          setNewDesc("");
+                          setNewTitle("");
+                          // clear suggestions
+                          setTitleSuggestions([]);
                         },
                       },
                       "Cancel",
