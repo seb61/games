@@ -70,13 +70,8 @@ function App({ initialLoggedIn = false }) {
   const [posterSearchResults, setPosterSearchResults] = useState([]);
   const [posterSearchContext, setPosterSearchContext] = useState("");
 
-  // fetch movies on login
   // cookie check
   useEffect(() => {
-    if (!loggedIn) return; // if state isnt true
-    fetch("/api/movies")
-      .then(async (res) => {
-        let data = [];
     // parse cookies into a map
     const cookieMap = {};
     // get key pairs
@@ -86,12 +81,20 @@ function App({ initialLoggedIn = false }) {
       cookieMap[name] = decodeURIComponent(rest.join("="));
     });
 
-        // parse
-        try {
-          data = await res.json();
-        } catch (err) {
-          data = [];
-        }
+    // log in the user if cookie exists
+    const savedUser = cookieMap["fts_user"];
+    if (savedUser) {
+      setCurrentUser(savedUser);
+      const savedType = cookieMap["fts_type"] || "";
+      setAccountType(savedType);
+      setLoggedIn(true);
+      setShowLoginModal(false);
+      // refresh catalogues and default to global view
+      fetchMyCatalogue();
+      fetchGlobalCatalogue();
+      setView("global");
+    }
+  }, []);
 
         if (!res.ok) {
           // if error
