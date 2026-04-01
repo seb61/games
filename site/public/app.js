@@ -848,6 +848,193 @@ function App({ initialLoggedIn = false }) {
     }
   };
 
+  /**
+   * Helper to update a specific field for a user in the settings page
+   * @param {number} index index of the user in settingsUsers
+   * @param {string} field field to update
+   * @param {string} value new value
+   */
+  const updateSettingsUserField = (index, field, value) => {
+    setSettingsUsers((prev) => {
+      const arr = [...prev];
+      // only update if index is valid
+      if (index >= 0 && index < arr.length) {
+        arr[index] = { ...arr[index], [field]: value };
+      }
+      return arr;
+    });
+  };
+
+  /**
+   * saves changes to a specific user in the settings page *ADMIN*
+   * @param {number} index index of the user
+   */
+  const saveSettingsUser = async (index) => {
+    const user = settingsUsers[index];
+
+    if (!user) return;
+
+    const payload = { targetUsername: user.username };
+    if (user.newUsername && user.newUsername !== user.username) {
+      // validate username
+      payload.newUsername = user.newUsername;
+    }
+
+    if (user.newPassword && user.newPassword.trim() !== "") {
+      // validate password
+      if (
+        !user.newConfirmPassword ||
+        user.newPassword !== user.newConfirmPassword
+      ) {
+        setSettingsError("Passwords do not match.");
+        return;
+      }
+      payload.newPassword = user.newPassword;
+    }
+
+    if (user.newAccountType && user.newAccountType !== user.accountType) {
+      // if type changed
+      payload.newAccountType = user.newAccountType;
+    }
+    try {
+      const res = await fetch("/api/update-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      // response
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (err) {
+        data = {};
+      }
+
+      if (res.ok && data && data.success) {
+        // if the current user updated themselves and changed username
+        if (user.username === currentUser && payload.newUsername) {
+          const newU = payload.newUsername;
+          setCurrentUser(newU);
+          // update cookies
+          document.cookie =
+            "fts_user=" +
+            encodeURIComponent(newU) +
+            "; path=/; max-age=" +
+            7 * 24 * 60 * 60; // 7days in sec
+        }
+      } else {
+        const msg = (data && data.message) || "Failed to update user";
+        setSettingsError(msg);
+      }
+    } catch (err) {
+      setSettingsError("Network error while updating user");
+    }
+
+    // refresh list after save
+    if (accountType === "admin") {
+      fetchUsersList();
+    } else {
+      // refresh personal fields for user
+      setSettingsUsername(currentUser);
+      setSettingsPassword("");
+    }
+    // refresh catalogues
+    fetchMyCatalogue();
+    fetchGlobalCatalogue();
+  };
+
+  // user settings save handler
+  const saveCurrentUserSettings = async () => {
+    const payload = { targetUsername: currentUser };
+    if (settingsUsername && settingsUsername !== currentUser) {
+      // validate username
+      payload.newUsername = settingsUsername;
+    }
+
+    if (settingsPassword && settingsPassword.trim() !== "") {
+      // validate password
+      if (
+        !settingsConfirmPassword ||
+        settingsPassword !== settingsConfirmPassword
+      ) {
+        setSettingsError("Passwords do not match.");
+        return;
+      }
+      payload.newPassword = settingsPassword;
+    }
+
+    try {
+      const res = await fetch("/api/update-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (err) {
+        data = {};
+      }
+
+      if (res.ok && data && data.success) {
+        // update current user and cookies if username changed
+        if (payload.newUsername) {
+          setCurrentUser(payload.newUsername);
+          document.cookie =
+            "fts_user=" +
+            encodeURIComponent(payload.newUsername) +
+            "; path=/; max-age=" +
+            7 * 24 * 60 * 60;
+        }
+        // clear password field
+        setSettingsPassword("");
+        setSettingsError("");
+      } else {
+        const msg = (data && data.message) || "Failed to update settings";
+        setSettingsError(msg);
+      }
+    } catch (err) {
+      setSettingsError("Network error while updating settings");
+    }
+    // refresh catalogues
+    fetchMyCatalogue();
+    fetchGlobalCatalogue();
+  };
+
+  /**
+   * saves the users personal catalogue to the database
+   * @param {Array} list the list of movies to save
+   */
+  const saveMyCatalogue = async (list) => {
+    if (!currentUser) return;
+
+    // payload
+    const payload = list.map((m) => ({
+      title: m.title,
+      description: m.description,
+      releaseYear: m.releaseYear || "",
+      rating: m.rating != null ? String(m.rating) : "",
+      genre: "",
+      coverImage: m.poster || "",
+    }));
+
+    try {
+      const res = await fetch(
+        `/api/save-catalogue?username=${encodeURIComponent(currentUser)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ movies: payload }),
+        },
+      );
+    } catch (err) {
+      console.error("Failed to save catalogue", err);
+    }
+    // refresh
+    fetchGlobalCatalogue();
+  };
+
   // build DOM
   return React.createElement("div", { className: "app-container" }, [
     // header
