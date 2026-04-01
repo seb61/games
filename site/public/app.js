@@ -507,6 +507,31 @@ function App({ initialLoggedIn = false }) {
     setEditSelectedPoster("");
     setEditTitleSuggestions([]);
   };
+
+  // delete a movie from personal catalogue
+  const deleteMyMovie = (id) => {
+    if (id == null) return;
+    const updatedList = myMovies.filter((m) => m.id !== id);
+    setMyMovies(updatedList);
+    saveMyCatalogue(updatedList);
+  };
+
+  /**
+   * Deletes a movie site wide based *ADMIN*
+   * @param {string} title the movie title to remove
+   */
+  const deleteMovie = async (title) => {
+    if (!title) return;
+    try {
+      await fetch(`/api/delete-movie?title=${encodeURIComponent(title)}`, {
+        method: "DELETE",
+      });
+    } catch (err) {
+      console.error("Failed to delete movie", err);
+    }
+    // refresh both catalogues
+    fetchMyCatalogue();
+    fetchGlobalCatalogue();
   };
 
   // register a new account
@@ -569,15 +594,24 @@ function App({ initialLoggedIn = false }) {
 
   // logout the current user
   const handleLogout = () => {
-    // clear session state
+    // clear states
     setLoggedIn(false);
     setCurrentUser("");
+    setAccountType("");
     setMovies([]);
+    setMyMovies([]);
+    setGlobalMovies([]);
+    setView("global");
+    setNextId(1);
     setShowAddModal(false);
     setShowEditModal(false);
     setShowUserMenu(false);
     // show login modal again
     setShowLoginModal(true);
+
+    // remove login cookies
+    document.cookie = "fts_user=; path=/; max-age=0";
+    document.cookie = "fts_type=; path=/; max-age=0";
   };
 
   // open the extended search.
