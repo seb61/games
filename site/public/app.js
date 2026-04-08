@@ -671,7 +671,9 @@ function App({ initialLoggedIn = false }) {
 
   // handle search bar
   const filteredMovies = movies.filter((m) =>
-    m.title.toLowerCase().includes(searchQuery.trim().toLowerCase()),
+    m.title?.toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
+    m.genre?.toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
+    m.releaseYear?.includes(searchQuery.trim()),
   );
 
   // fetches and populates the users personal catalogue
