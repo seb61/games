@@ -675,7 +675,10 @@ function App({ initialLoggedIn = false }) {
   const filteredMovies = movies.filter((m) =>
     m.title?.toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
     m.genre?.toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
-    m.releaseYear?.includes(searchQuery.trim()),
+    m.releaseYear?.includes(searchQuery.trim()) ||
+    String(m.rating).includes(searchQuery.trim()) || 
+    String(m.imdbRating).includes(searchQuery.trim()),
+
   );
 
   // fetches and populates the users personal catalogue
@@ -1053,7 +1056,7 @@ function App({ initialLoggedIn = false }) {
           key: "searchBar",
           type: "text",
           className: "search-bar",
-          placeholder: "Search Movie",
+          placeholder: "Search Movie by Title, Genre, Release Year or Rating",
           value: searchQuery,
           onChange: (e) => setSearchQuery(e.target.value),
           disabled: !loggedIn,
