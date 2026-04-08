@@ -189,3 +189,19 @@ test("starrating", () => {
 
   expect(onRateMock).toHaveBeenCalledWith(4);
 });
+
+test("hovering over a star highlights it", () => {
+  const { container } = render(
+    React.createElement(window.StarRating, {
+      rating: 1,
+      onRate: jest.fn(),
+    })
+  );
+
+  const stars = container.querySelectorAll(".star");
+
+  fireEvent.mouseEnter(stars[4]); // hover 5th star
+
+  const selectedStars = container.querySelectorAll(".star.selected");
+  expect(selectedStars.length).toBe(5);
+});
