@@ -4,15 +4,18 @@ import App from "./public/app";
 import React from "react";
 import { StarRating } from "./public/components/StarRating";
 
-
+// expose hooks globally
 global.useState = React.useState;
 global.useEffect = React.useEffect;
+
+// avoid rendering postersearch in tests
 global.PosterSearchOverlay = () => null;
 
 jest.mock("./public/components/PosterSearch", () => () => (
   <div>test</div>
 ));
 
+// stubs for window components
 beforeAll(() => {
   window.SettingsCard = ({ children }) => <div>{children}</div>;
 
@@ -52,6 +55,7 @@ const mockEmptyCatalogue = () => {
 };
 
 test("wrong credentials", async () => {
+  // mock failed response
   fetch.mockResolvedValueOnce({
     ok: false,
     status: 401,
@@ -173,11 +177,14 @@ test("starrating", () => {
     <StarRating rating={2} onRate={onRateMock} />
   );
 
+  // all stars selected
   const stars = container.querySelectorAll(".star");
 
+  // 1st 2 stars selected
   expect(stars[0]).toHaveClass("selected");
   expect(stars[1]).toHaveClass("selected");
 
+  // click on 4th star
   stars[3].click();
 
   expect(onRateMock).toHaveBeenCalledWith(4);
