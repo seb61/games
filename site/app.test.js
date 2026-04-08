@@ -1,129 +1,207 @@
-const React = require('react');
-require('@testing-library/jest-dom');
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import App from "./public/app";
+import React from "react";
+import { StarRating } from "./public/components/StarRating";
 
-const { render, screen, fireEvent } = require('@testing-library/react');
-const App = require('./public/app');
+// expose hooks globally
+global.useState = React.useState;
+global.useEffect = React.useEffect;
 
+// avoid rendering postersearch in tests
+global.PosterSearchOverlay = () => null;
+
+jest.mock("./public/components/PosterSearch", () => () => (
+  <div>test</div>
+));
+
+// stubs for window components
+beforeAll(() => {
+  window.SettingsCard = ({ children }) => <div>{children}</div>;
+
+  window.CataloguePage = ({ movies = [] }) => (
+    <div>
+      {movies.map((m, i) => (
+        <div key={i}>{m.title}</div>
+      ))}
+    </div>
+  );
+});
+
+// mock fetch globally
 beforeEach(() => {
-  // mock fetch to avoid fetch is not defined
   global.fetch = jest.fn(() =>
     Promise.resolve({
-      json: () =>
-        Promise.resolve([
-          {
-            title: 'The Dark Knight',
-            description: 'Batman movie',
-            coverImage: 'Batman confronts the Joker, a criminal mastermind whose chaotic schemes threaten to plunge Gotham City into anarchy.',
-            rating: '',
-          },
-        ]),
+      ok: true,
+      json: () => Promise.resolve({ success: true }),
     })
   );
 });
 
-afterEach(() => {
-  // clear mocks so tests dont collide
-  jest.clearAllMocks();
+// login mock helper
+const mockLoginSuccess = () => {
+  fetch.mockResolvedValueOnce({
+    ok: true,
+    json: async () => ({ success: true, accountType: "admin" }),
+  });
+};
+
+// empty catalogue helper
+const mockEmptyCatalogue = () => {
+  fetch.mockResolvedValue({
+    ok: true,
+    json: async () => ({ movies: [] }),
+  });
+};
+
+test("wrong credentials", async () => {
+  // mock failed response
+  fetch.mockResolvedValueOnce({
+    ok: false,
+    status: 401,
+    json: async () => ({ message: "Invalid credentials" }),
+  });
+
+  render(<App />);
+
+  fireEvent.change(screen.getByPlaceholderText(/username/i), {
+    target: { value: "wrong" },
+  });
+
+  fireEvent.change(screen.getByPlaceholderText(/password/i), {
+    target: { value: "wrong" },
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: /login/i }));
+
+  expect(await screen.findByText(/invalid credentials/i)).toBeInTheDocument();
 });
 
-describe('App', () => {
+test("renders login screen on start", () => {
+  render(<App />);
+  expect(screen.getByRole("button", { name: /login/i })).toBeInTheDocument();
+});
 
-  test('renders login modal by default', () => {
-    render(React.createElement(App));
+test("UI updates after login", async () => {
+  mockLoginSuccess();
+  mockEmptyCatalogue();
 
-    // heading with text "login" exists
-    expect(
-      screen.getByRole('heading', { name: /login/i })
-    ).toBeInTheDocument();
+  render(<App />);
 
-    // username input field exists
-    expect(
-      screen.getByPlaceholderText(/input username/i)
-    ).toBeInTheDocument();
+  fireEvent.change(screen.getByPlaceholderText(/username/i), {
+    target: { value: "admin" },
   });
 
-  test('renders movies after successful login', async () => {
-    // pass prop to simulate logged in state
-    render(React.createElement(App, { initialLoggedIn: true }));
-
-    const movies = await screen.findAllByRole('heading', { level: 2 });  // title rendered as h2
-
-    expect(movies.length).toBeGreaterThan(0);
+  fireEvent.change(screen.getByPlaceholderText(/password/i), {
+    target: { value: "admin" },
   });
 
-  test('adds movie', () => {
-    render(React.createElement(App, { initialLoggedIn: true }));
+  fireEvent.click(screen.getByRole("button", { name: /login/i }));
 
-    // fire dom events
-    fireEvent.click(
-      screen.getAllByRole('button', { name: /\+ add movie/i })[0]
-    );
+  expect(await screen.findByText("admin")).toBeInTheDocument();
+});
 
-    fireEvent.change(screen.getByPlaceholderText(/enter title/i), {
-      target: { value: 'Inception' },
-    });
+test("add movie modal", async () => {
+  mockLoginSuccess();
+  mockEmptyCatalogue();
 
-    fireEvent.change(screen.getByPlaceholderText(/enter a short description/i), {
-      target: { value: 'Dream movie' },
-    });
+  render(<App />);
 
-    fireEvent.click(screen.getByText(/^add$/i));
+  fireEvent.click(screen.getByText("+"));
 
-    expect(screen.getByText('Inception')).toBeInTheDocument();
+  expect(screen.getByText(/add a movie/i)).toBeInTheDocument();
+});
+
+test("add movie", async () => {
+  mockLoginSuccess();
+  mockEmptyCatalogue();
+
+  render(<App />);
+
+  fireEvent.click(screen.getByText("+"));
+
+  fireEvent.change(screen.getByPlaceholderText(/enter title/i), {
+    target: { value: "Movie Name" },
   });
 
-  test('removes last movie', () => {
-    render(React.createElement(App, { initialLoggedIn: true }));
+  fireEvent.click(screen.getByRole("button", { name: /^Add$/i }));
 
-    fireEvent.click(
-      screen.getAllByRole('button', { name: /\+ add movie/i })[0]
-    );
+  await waitFor(() => {
+    expect(screen.getByText("Movie Name")).toBeInTheDocument();
+  });
+});
 
-    fireEvent.change(screen.getByPlaceholderText(/enter title/i), {
-      target: { value: 'Test Movie' },
-    });
+test("search movies", async () => {
+  mockLoginSuccess();
+  mockEmptyCatalogue();
 
-    fireEvent.change(screen.getByPlaceholderText(/enter a short description/i), {
-      target: { value: 'desc' },
-    });
+  render(<App />);
 
-    fireEvent.click(screen.getByText(/^add$/i));
+  // add
+  fireEvent.click(screen.getByText("+"));
 
-    fireEvent.click(
-      screen.getByRole('button', { name: /remove movie/i })
-    );
-
-    expect(
-      screen.queryByText('Test Movie')
-    ).not.toBeInTheDocument();
+  fireEvent.change(screen.getByPlaceholderText(/title/i), {
+    target: { value: "Movie Name" },
   });
 
-  test('rates movie', async () => {
-    render(React.createElement(App, { initialLoggedIn: true }));
+  fireEvent.click(screen.getByRole("button", { name: /^Add$/i }));
 
-    const stars = await screen.findAllByText('★');
-
-    fireEvent.click(stars[4]);
-
-    expect(stars[4]).toHaveClass('selected');
+  // search
+  fireEvent.change(screen.getByPlaceholderText(/search movie/i), {
+    target: { value: "Movie Name" },
   });
 
-  test('add movie modal opens and closes', () => {
-    render(React.createElement(App, { initialLoggedIn: true }));
-
-    fireEvent.click(
-      screen.getAllByRole('button', { name: /\+ add movie/i })[0]
-    );
-
-    expect(
-      screen.getByRole('heading', { name: /add a movie/i })
-    ).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText(/cancel/i));
-
-    expect(
-      screen.queryByRole('heading', { name: /add a movie/i })
-    ).not.toBeInTheDocument();
+  await waitFor(() => {
+    expect(screen.getByText("Movie Name")).toBeInTheDocument();
   });
+});
 
+test("logout returns to login screen", async () => {
+  mockLoginSuccess();
+  mockEmptyCatalogue();
+
+  render(<App />);
+
+  fireEvent.click(screen.getByText("admin"));
+  fireEvent.click(screen.getByText(/logout/i));
+
+  expect(screen.getByRole("button", { name: /login/i })).toBeInTheDocument();
+});
+
+test("starrating", () => {
+  const StarRating = window.StarRating;
+
+  const onRateMock = jest.fn();
+
+  const { container } = render(
+    <StarRating rating={2} onRate={onRateMock} />
+  );
+
+  // all stars selected
+  const stars = container.querySelectorAll(".star");
+
+  // 1st 2 stars selected
+  expect(stars[0]).toHaveClass("selected");
+  expect(stars[1]).toHaveClass("selected");
+
+  // click on 4th star
+  stars[3].click();
+
+  expect(onRateMock).toHaveBeenCalledWith(4);
+});
+
+test("hovering over a star highlights it", () => {
+  const { container } = render(
+    React.createElement(window.StarRating, {
+      rating: 1,
+      onRate: jest.fn(),
+    })
+  );
+
+  const stars = container.querySelectorAll(".star");
+
+  fireEvent.mouseEnter(stars[4]); // hover 5th star
+
+  const selectedStars = container.querySelectorAll(".star.selected");
+  expect(selectedStars.length).toBe(5);
 });

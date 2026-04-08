@@ -23,16 +23,24 @@ The front-end is built using **React** loaded via a CDN. With the following comp
 ## Running tests
 1. Install dependencies if required (see `package.json`)
 2. 
-In `app.js`, uncomment these (for tests only): 
+In `app.js`, uncomment these 3 (for tests only): 
+```
+const React = require('react');
+const ReactDOM = require('react-dom');
+const { useEffect, useState } = React;
+```
+and comment these out (for tests only):
+```
+const { useEffect } = React;
+```
+and
+```
+ReactDOM.render(React.createElement(App), document.getElementById("root"));
+```
+
+Also in `StarRating.js`, uncomment these 2 (for tests only):
 ```
 const React = require('react');
 const ReactDOM = require('react-dom');
 ```
-and comment this out (for tests only):
-```
-ReactDOM.render(
-  React.createElement(App),
-  document.getElementById('root')
-);
-```
-3. `npm test` from `site`.
+3. `npm test app` from `site`.
