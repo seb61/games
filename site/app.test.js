@@ -140,7 +140,7 @@ test("search movies", async () => {
   // add
   fireEvent.click(screen.getByText("+"));
 
-  fireEvent.change(screen.getByPlaceholderText(/title/i), {
+  fireEvent.change(screen.getByPlaceholderText(/enter title/i), {
     target: { value: "Movie Name" },
   });
 
