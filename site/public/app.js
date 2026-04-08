@@ -1,7 +1,9 @@
-// UNCOMMENT THESE 2 ONLY FOR TESTS
+// UNCOMMENT THESE 3 ONLY FOR TESTS
 // const React = require('react');
 // const ReactDOM = require('react-dom');
+// const { useEffect, useState } = React;
 
+// COMMENT THIS OUT ONLY FOR TESTS
 const { useEffect } = React;
 
 /**
@@ -2072,19 +2074,7 @@ function App({ initialLoggedIn = false }) {
 }
 
 // render the DOM
-// COMMENT THIS ONLY FOR TESTS
+// COMMENT THIS OUT ONLY FOR TESTS
 ReactDOM.render(React.createElement(App), document.getElementById("root"));
 
-// fixed to use React 18 syntax
-// const { createRoot } = require("react-dom/client");
-
-// if (typeof document !== "undefined") {
-//   const rootEl = document.getElementById("root");
-//   if (rootEl) {
-//     const root = createRoot(rootEl);
-//     root.render(React.createElement(App));
-//   }
-// }
-
-// export app to avoid auto render issues
-// module.exports = App;
+module.exports = App;

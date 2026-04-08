@@ -1,3 +1,7 @@
+// UNCOMMENT THESE 2 ONLY FOR TESTS
+// const React = require('react');
+// const ReactDOM = require('react-dom');
+
 // star rating system
 const { useState } = React;
 
