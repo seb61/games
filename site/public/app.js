@@ -676,8 +676,8 @@ function App({ initialLoggedIn = false }) {
     m.title?.toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
     m.genre?.toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
     m.releaseYear?.includes(searchQuery.trim()) ||
-    String(m.rating).includes(searchQuery.trim()) || 
-    String(m.imdbRating).includes(searchQuery.trim()),
+    String(m.rating).startsWith(searchQuery.trim()) || 
+    String(m.imdbRating).startsWith(searchQuery.trim()),
 
   );
 
