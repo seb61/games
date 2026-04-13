@@ -65,9 +65,9 @@ This section is a simple explanation for an end-user, as to how to access and us
 3. Your account has successfully been registered, and from now on, you may access it through the login screen instead
 
 ### Features
-- There is a search bar that asks for title or some other input to filter by
-- The Home view of the movie catalogue, where one can browse all added movies
-- The Personal Movie Catalogue where one can create your own list
+- Search Bar/Filter
+- Main Catalogue of all movies
+- Personal Movie Catalogue
 - Changing Password
 - Logging Out
 
