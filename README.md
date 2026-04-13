@@ -44,3 +44,51 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 ```
 3. `npm test app` from `site`.
+
+## User In/Out Application
+
+This section is a simple explanation for an end-user, as to how to access and use the FTS Movie Catalogue
+
+### Running the system
+1. Install dependencies if required (see `package.json`)
+2. Change directory to `site/`
+3. Start the server with `npm start`. The server will listen on port 3000 by default.
+4. Visit `http://localhost:3000` in your browser.
+
+### Login
+1. Enter your chosen username and password into the login screen
+2. If wrong login credentials are given, then an error message will pop up
+
+### Registration
+1. Click on "Register" on the login screen
+2. Entering chosen username and password
+3. Your account has successfully been registered, and from now on, you may access it through the login screen instead
+
+### Features
+- There is a search bar that asks for title or some other input to filter by
+- The Home view of the movie catalogue, where one can browse all added movies
+- The Personal Movie Catalogue where one can create your own list
+- Changing Password
+- Logging Out
+
+### Adding Movies to Home Catalogue
+1. In the bottom right, there is a `+` button. Click it.
+2. Type in the movie name into the allocated slot
+3. A drop down list will appear, where multiple movies will pop up. Select the movie you had in mind
+4. Press `Add` and the movie will be available on the movie catalogue
+
+### Adding Movies to Personal Catalogue
+1. Press the folder icon in the top right
+2. In the middle, there is a dotted outline with a `+` in the middle. Click it.
+3. Type in the movie name into the allocated slot
+4. A drop down list will appear, where multiple movies will pop up. Select the movie you had in mind
+5. Press `Add` and the movie will be available on the personal catalogue
+
+### Changing Password
+1. In the top right, click your username
+2. A dropdown menu appears. Click settings
+3. Enter the new password into New Password and Confirm Password
+
+### Logging Out
+1. In the top right, click your username
+2. A dropdown menu appars. Click logout
